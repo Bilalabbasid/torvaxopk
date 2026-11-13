@@ -39,7 +39,7 @@ export default async function ShopPage(props: PageProps<'/shop'>) {
 
       <div className="mt-12 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((product, i) => (
-          <ProductCard key={product.id} product={product} mode={settings.sale_mode} index={i} />
+          <ProductCard key={`${product.id}-${selected ?? ''}`} product={product} mode={settings.sale_mode} index={i} colour={selected} />
         ))}
       </div>
       {!shown.length ? <p className="mt-12 text-steel-600">Nothing here yet.</p> : null}

@@ -25,7 +25,13 @@ export function TotalsTable({ quote }: { quote: Quote }) {
           </div>
         </div>
       ) : null}
-      {totals.savings > 0 ? <p className="pt-1 text-ok">You save {money(totals.savings)}.</p> : null}
+      {totals.savings > 0 ? (
+        <p className="pt-1 text-ok">
+          {saleMode === 'preorder' && totals.discount === 0
+            ? `Preorder pricing: ${money(totals.savings)} below the after-launch price.`
+            : `You save ${money(totals.savings)}.`}
+        </p>
+      ) : null}
     </dl>
   );
 }

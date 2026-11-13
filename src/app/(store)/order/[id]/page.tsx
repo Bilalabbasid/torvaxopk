@@ -99,7 +99,7 @@ export default async function OrderPage(props: PageProps<'/order/[id]'>) {
             {order.order_items.map((item) => (
               <li key={item.id} className="flex gap-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.image_url} alt="" className="aspect-[4/5] w-16 bg-paper object-cover" />
+                <img src={item.image_url} alt="" className="aspect-[4/5] w-16 bg-paper object-contain" />
                 <div className="flex-1 text-sm">
                   <p className="font-medium">{item.product_name}</p>
                   <p className="text-ink/60">

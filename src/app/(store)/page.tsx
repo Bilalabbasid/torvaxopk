@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Chevrons } from '@/components/brand';
 import { ColourStory } from '@/components/colour-story';
-import { PriceTag, ProductCard, priceRange } from '@/components/product-card';
+import { PriceTag, ProductCard, priceRange, singlePrices } from '@/components/product-card';
 import { getSettings, listActiveProducts } from '@/lib/catalog';
 import { money } from '@/lib/pricing';
 
@@ -26,7 +26,7 @@ const technology = [
   },
 ];
 
-const marquee = ['Elegance endures', 'TSA lock built in', 'Detachable spinners', 'Three sizes', 'Three colours', 'Delivered across Pakistan'];
+const marquee = ['German quality', 'Built to EU standards', 'Elegance endures', 'TSA lock built in', 'Detachable spinners', '2-year warranty', 'Three sizes', 'Three colours', 'Delivered across Pakistan'];
 
 export default async function HomePage() {
   const [settings, products] = await Promise.all([getSettings(), listActiveProducts()]);
@@ -36,6 +36,9 @@ export default async function HomePage() {
   const setPrice = set ? priceRange(set, mode) : null;
   const fromPrice = products.length ? Math.min(...products.map((p) => priceRange(p, mode).price)) : null;
   const preorder = mode === 'preorder';
+  const separate = singlePrices(products, mode);
+  const separateTotal = separate.reduce((sum, p) => sum + p, 0);
+  const setSaving = setPrice && separate.length > 1 ? separateTotal - setPrice.price : 0;
 
   return (
     <>
@@ -45,7 +48,7 @@ export default async function HomePage() {
           <div className="relative z-10 lg:col-span-5">
             <p className="label flex items-center gap-3 text-steel-600">
               <span className="h-px w-8 bg-ember" />
-              {preorder ? 'The Forward series · Preorder Pakistan' : 'The Forward series · Now in Pakistan'}
+              {preorder ? 'German quality · The Forward series · Preorder Pakistan' : 'German quality · The Forward series · Now in Pakistan'}
             </p>
             <h1 className="display mt-6 text-[clamp(3.25rem,8.2vw,7.5rem)]">
               Elegance
@@ -53,8 +56,8 @@ export default async function HomePage() {
               endures.
             </h1>
             <p className="mt-7 max-w-md text-lg leading-relaxed text-ink/70">
-              Hardshell luggage made to look as good on its hundredth trip as on its first. Locked, organised and rolling on
-              wheels you can replace yourself.
+              Hardshell luggage from Germany, built to EU quality standards and made to look as good on its hundredth trip
+              as on its first. Locked, organised and rolling on wheels you can replace yourself.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link href="/shop" className="btn-primary">
@@ -66,7 +69,7 @@ export default async function HomePage() {
             </div>
             {fromPrice ? (
               <p className="label mt-8 text-steel-600">
-                From {money(fromPrice)} {preorder ? '· Preorder price' : ''}
+                From {money(fromPrice)} {preorder ? '· Preorder price, goes up at launch' : ''}
               </p>
             ) : null}
           </div>
@@ -112,12 +115,50 @@ export default async function HomePage() {
         </div>
       </div>
 
+      {/* Origin */}
+      <section className="container-x pt-14 lg:pt-20">
+        <div className="grid items-end gap-8 lg:grid-cols-12">
+          <div className="lg:col-span-6">
+            <p className="label text-steel-600">From Germany</p>
+            <h2 className="display mt-4 text-5xl sm:text-6xl">
+              German quality.
+              <br />
+              EU standards.
+            </h2>
+            <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/70">
+              Torvaxo is a German luggage brand. The Forward series is built to the quality standards of the European
+              market, and that is the case we deliver in Pakistan.
+            </p>
+          </div>
+          <dl className="hairline border-t lg:col-span-5 lg:col-start-8">
+            {[
+              ['Origin', 'German brand'],
+              ['Quality', 'Built to EU standards'],
+              ['Warranty', '2 years'],
+              ['Security', 'TSA lock built into the frame'],
+              ['Repairable', 'Wheels detach and replace'],
+            ].map(([label, value]) => (
+              <div key={label} className="hairline grid grid-cols-3 gap-4 border-b py-3">
+                <dt className="label pt-1 text-steel-600">{label}</dt>
+                <dd className="col-span-2">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
       {/* Offer */}
-      <section className="container-x pt-20 lg:pt-28">
+      <section className="container-x pt-12 lg:pt-16">
         <div className="grid gap-px bg-ink/10 md:grid-cols-3">
           {(preorder
             ? [
-                ['01', 'Preorder price', 'Save up to 31% against launch prices. The Set of Three is Rs 35,000 instead of Rs 51,000.'],
+                [
+                  '01',
+                  'Preorder price',
+                  setPrice?.compareAt
+                    ? `Not a sale or a discount: a lower price for preorders only. The Set of Three is ${money(setPrice.price)} now and ${money(setPrice.compareAt)} after launch.`
+                    : 'Not a sale or a discount: a lower price for preorders only. Every case goes to its regular price at launch.',
+                ],
                 ['02', `${money(settings.deposit_amount)} deposit`, 'Lock your price with a small deposit by card, JazzCash or Easypaisa. Pay the rest when it ships.'],
                 ['03', 'Refundable', 'Changed your mind before dispatch? Your deposit comes back in full.'],
               ]
@@ -169,10 +210,18 @@ export default async function HomePage() {
                   One matched set.
                 </h3>
                 <p className="mt-5 max-w-sm text-bone/70">{set.description}</p>
+                {setSaving > 0 ? (
+                  <p className="mt-5 max-w-sm font-mono text-sm tabular-nums text-bone/70">
+                    One by one{preorder ? ' (preorder)' : ''}: {separate.map((p) => money(p)).join(' + ')} = {money(separateTotal)}
+                    <span className="mt-1 block text-ember">
+                      As a set{preorder ? ' (preorder)' : ''}: {money(setPrice.price)} · saves {money(setSaving)}
+                    </span>
+                  </p>
+                ) : null}
               </div>
-              <div className="flex items-center justify-between border-t border-bone/15 pt-6">
-                <PriceTag price={setPrice.price} compareAt={setPrice.compareAt} className="text-xl" dark />
-                <span className="label flex items-center gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-t border-bone/15 pt-6">
+                <PriceTag price={setPrice.price} compareAt={setPrice.compareAt} preorder={preorder} className="text-xl" dark />
+                <span className="label flex items-center gap-3 whitespace-nowrap">
                   {preorder ? 'Preorder the set' : 'Shop the set'}
                   <Chevrons count={3} className="h-3.5 w-auto text-ember transition-transform duration-500 group-hover:translate-x-1.5" />
                 </span>
@@ -184,7 +233,7 @@ export default async function HomePage() {
                 src={set.product_images[0]?.url}
                 alt={set.product_images[0]?.alt ?? set.name}
                 loading="lazy"
-                className="h-full min-h-72 w-full object-cover transition-transform duration-[1400ms] ease-out-expo group-hover:scale-[1.03]"
+                className="h-full min-h-72 w-full object-contain transition-transform duration-[1400ms] ease-out-expo group-hover:scale-[1.03]"
               />
             </div>
           </Link>
@@ -247,6 +296,28 @@ export default async function HomePage() {
           }))}
         />
       ) : null}
+
+      {/* Closing call to action */}
+      <section className="relative overflow-hidden bg-ember text-ink">
+        <svg className="absolute inset-0 size-full text-ink/[0.07]" aria-hidden="true">
+          <defs>
+            <pattern id="forward-strip" width="260" height="420" patternUnits="userSpaceOnUse">
+              <polygon points="0,0 82,0 260,210 82,420 0,420 178,210" fill="currentColor" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#forward-strip)" />
+        </svg>
+        <div className="container-x relative flex flex-wrap items-end justify-between gap-8 py-20 lg:py-28">
+          <h2 className="display text-6xl sm:text-7xl lg:text-8xl">
+            Move
+            <br />
+            forward.
+          </h2>
+          <Link href="/shop" className="btn bg-ink text-bone hover:bg-bone hover:text-ink">
+            {preorder ? 'Preorder the Forward series' : 'Shop the Forward series'} <Chevrons count={1} className="h-3 w-auto" />
+          </Link>
+        </div>
+      </section>
     </>
   );
 }

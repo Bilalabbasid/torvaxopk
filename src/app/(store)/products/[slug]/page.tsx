@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ProductBuyBox } from '@/components/product-buy-box';
-import { getProductBySlug, getSettings } from '@/lib/catalog';
+import { singlePrices } from '@/components/product-card';
+import { getProductBySlug, getSettings, listActiveProducts } from '@/lib/catalog';
 import { money, unitPrice } from '@/lib/pricing';
 
 export async function generateMetadata(props: PageProps<'/products/[slug]'>) {
@@ -22,17 +23,23 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
   if (!product) notFound();
 
   const mode = settings.sale_mode;
-  const variants = product.product_variants.map((v) => ({
-    id: v.id,
-    colorName: v.color_name,
-    colorHex: v.color_hex,
-    stock: v.stock,
-    ...unitPrice(v, mode),
-    images: product.product_images
-      .filter((img) => img.variant_id === v.id && !img.is_listing)
-      .concat(product.product_images.filter((img) => !img.variant_id))
-      .map((img) => ({ url: img.url, alt: img.alt })),
-  }));
+  const separatePrices = product.is_set ? singlePrices(await listActiveProducts(), mode) : undefined;
+  const variants = product.product_variants.map((v) => {
+    // Gallery: this colour's own photos first, then the shared detail shots. The Set of Three only has
+    // its listing photo per colour, so fall back to that rather than showing no photo of the colour.
+    const own = product.product_images.filter((img) => img.variant_id === v.id);
+    const gallery = own.filter((img) => !img.is_listing);
+    return {
+      id: v.id,
+      colorName: v.color_name,
+      colorHex: v.color_hex,
+      stock: v.stock,
+      ...unitPrice(v, mode),
+      images: (gallery.length ? gallery : own)
+        .concat(product.product_images.filter((img) => !img.variant_id))
+        .map((img) => ({ url: img.url, alt: img.alt })),
+    };
+  });
 
   // Product structured data (Google rich results: price, availability, PKR).
   const site = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
@@ -86,6 +93,7 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
         mode={mode}
         depositAmount={settings.deposit_amount}
         couponPercent={settings.launch_coupon_percent}
+        separatePrices={separatePrices}
       />
 
       <section className="container-x grid gap-12 border-t hairline py-16 lg:grid-cols-12">
@@ -119,8 +127,9 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
           <div className="container-x grid gap-8 py-14 md:grid-cols-3">
             <p className="label text-ember md:col-span-1">How preorder works</p>
             <p className="text-bone/70 md:col-span-2">
-              Pay a {money(settings.deposit_amount)} deposit today to lock in the preorder price. We email you a secure link to
-              pay the balance (online or cash on delivery) when your order is ready to ship.{' '}
+              Pay a {money(settings.deposit_amount)} deposit today to lock in the preorder price. It is not a sale: the
+              preorder price ends at launch, when every case goes to its regular price. We email you a secure link to pay
+              the balance (online or cash on delivery) when your order is ready to ship.{' '}
               <Link href="/launch" className="text-bone underline underline-offset-4 hover:text-ember">
                 Read more
               </Link>

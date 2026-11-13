@@ -11,7 +11,7 @@ export function SiteFooter({ settings }: { settings: Settings }) {
         <div className="md:col-span-5">
           <Logo className="h-5 w-auto text-bone" />
           <p className="mt-6 max-w-sm text-bone/60">
-            Hardshell luggage made to look as good on its hundredth trip as on its first. Now shipping across Pakistan.
+            A German luggage brand. Hardshell cases built to EU quality standards and made to look as good on their hundredth trip as on their first. Now shipping across Pakistan.
           </p>
           <Chevrons count={8} className="mt-8 h-4 w-auto text-ember" />
         </div>

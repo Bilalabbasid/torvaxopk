@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { money, unitPrice } from '@/lib/pricing';
 import type { Product, SaleMode } from '@/lib/types';
+import { ProductCardView } from './product-card-view';
 
 export function priceRange(product: Product, mode: SaleMode) {
   const prices = product.product_variants.map((v) => unitPrice(v, mode));
@@ -8,17 +8,35 @@ export function priceRange(product: Product, mode: SaleMode) {
   return lowest;
 }
 
+/** Current price of each single case, for comparing the set against buying one by one. */
+export function singlePrices(products: Product[], mode: SaleMode) {
+  return products.filter((p) => !p.is_set).map((p) => priceRange(p, mode).price);
+}
+
 export function PriceTag({
   price,
   compareAt,
   className = '',
   dark = false,
+  preorder = false,
 }: {
   price: number;
   compareAt: number | null;
   className?: string;
   dark?: boolean;
+  /** Preorder pricing is not a markdown: show the after-launch price as a plain fact, never struck through. */
+  preorder?: boolean;
 }) {
+  if (preorder && compareAt) {
+    const muted = dark ? 'text-bone/60' : 'text-ink/60';
+    return (
+      <span className={`font-mono tabular-nums ${className}`}>
+        <span className="whitespace-nowrap">{money(price)}</span>
+        <span className={`ml-2 font-sans text-xs ${muted}`}>preorder</span>
+        <span className={`mt-1 block font-sans text-xs ${muted}`}>{money(compareAt)} after launch</span>
+      </span>
+    );
+  }
   return (
     <span className={`font-mono tabular-nums ${className}`}>
       {compareAt ? <s className={`mr-2 ${dark ? 'text-steel' : 'text-steel-600'}`}>{money(compareAt)}</s> : null}
@@ -27,49 +45,39 @@ export function PriceTag({
   );
 }
 
-export function ProductCard({ product, mode, index }: { product: Product; mode: SaleMode; index: number }) {
-  const listing = product.product_images.filter((i) => i.is_listing);
-  const image = listing[0] ?? product.product_images[0];
+export function ProductCard({
+  product,
+  mode,
+  index,
+  colour,
+}: {
+  product: Product;
+  mode: SaleMode;
+  index: number;
+  /** Colour name to start on, e.g. from the shop's colour filter. */
+  colour?: string | null;
+}) {
   const { price, compareAt } = priceRange(product, mode);
   const soldOut = product.product_variants.every((v) => v.stock <= 0);
+  const fallback = product.product_images.find((i) => i.is_listing) ?? product.product_images[0];
+  const colours = product.product_variants.map((v) => {
+    const own = product.product_images.filter((i) => i.variant_id === v.id);
+    const image = own.find((i) => i.is_listing) ?? own[0] ?? fallback;
+    return { id: v.id, name: v.color_name, hex: v.color_hex, image: image ? { url: image.url, alt: image.alt } : null };
+  });
+  const wanted = colour ? colours.findIndex((c) => c.name.toLowerCase() === colour.toLowerCase()) : -1;
 
   return (
-    <Link href={`/products/${product.slug}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden bg-paper">
-        {image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={image.url}
-            alt={image.alt}
-            loading="lazy"
-            className="size-full object-cover transition-transform duration-[1400ms] ease-out-expo group-hover:scale-[1.03]"
-          />
-        ) : null}
-        <span className="label absolute top-4 left-4 text-steel-600">0{index + 1}</span>
-        {mode === 'preorder' ? (
-          <span className="label absolute top-4 right-4 bg-ember px-2 py-1 text-[10px] text-ink">Preorder</span>
-        ) : null}
-        {soldOut ? (
-          <span className="label absolute right-4 bottom-4 bg-ink px-2 py-1 text-[10px] text-bone">Sold out</span>
-        ) : null}
-      </div>
-      <div className="mt-5 flex items-start justify-between gap-4">
-        <div>
-          <h3 className="text-xl font-medium tracking-tight">{product.name}</h3>
-          <p className="mt-1 text-sm text-ink/60">{product.tagline}</p>
-          <div className="mt-3 flex gap-1.5">
-            {product.product_variants.map((v) => (
-              <span
-                key={v.id}
-                title={v.color_name}
-                className="size-3.5 rounded-full ring-1 ring-ink/15 ring-inset"
-                style={{ backgroundColor: v.color_hex }}
-              />
-            ))}
-          </div>
-        </div>
-        <PriceTag price={price} compareAt={compareAt} className="shrink-0 text-right text-sm" />
-      </div>
-    </Link>
+    <ProductCardView
+      href={`/products/${product.slug}`}
+      name={product.name}
+      tagline={product.tagline}
+      index={index}
+      colours={colours}
+      initial={Math.max(wanted, 0)}
+      preorder={mode === 'preorder'}
+      soldOut={soldOut}
+      price={<PriceTag price={price} compareAt={compareAt} preorder={mode === 'preorder'} className="block text-right text-sm" />}
+    />
   );
 }

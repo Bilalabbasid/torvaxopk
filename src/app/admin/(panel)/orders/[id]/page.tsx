@@ -52,7 +52,7 @@ export default async function AdminOrderPage(props: PageProps<'/admin/orders/[id
                   <tr key={item.id}>
                     <td className="w-16">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={item.image_url} alt="" className="aspect-[4/5] w-12 bg-paper object-cover" />
+                      <img src={item.image_url} alt="" className="aspect-[4/5] w-12 bg-paper object-contain" />
                     </td>
                     <td>
                       <p className="font-medium">{item.product_name}</p>

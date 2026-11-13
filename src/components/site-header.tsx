@@ -19,6 +19,8 @@ export function SiteHeader({ announcement }: { announcement: string }) {
   const [scrolled, setScrolled] = useState(false);
   const [openPath, setOpenPath] = useState<string | null>(null);
   const menuOpen = openPath === pathname; // closes itself on navigation
+  // "A · B · C" scrolls as separate items.
+  const items = announcement.split(' · ').map((part) => part.trim()).filter(Boolean);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -29,13 +31,25 @@ export function SiteHeader({ announcement }: { announcement: string }) {
 
   return (
     <>
-      <div className="bg-ink text-bone">
-        <p className="container-x label flex min-h-9 items-center justify-center gap-3 py-2 text-center text-[10px] text-bone/80">
-          <svg viewBox="0 0 44.88 100" className="h-2.5 w-auto shrink-0 text-ember" fill="currentColor" aria-hidden="true">
-            <polygon points="0,0 14,0 44.88,50 14,100 0,100 30.88,50" />
-          </svg>
-          {announcement}
-        </p>
+      <div className="group overflow-hidden bg-ink text-bone">
+        <p className="sr-only">{announcement}</p>
+        <div
+          className="flex min-h-9 w-max animate-drift items-center [animation-duration:70s] group-hover:[animation-play-state:paused] motion-reduce:animate-none"
+          aria-hidden="true"
+        >
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((copy) => (
+            <div key={copy} className="flex shrink-0 items-center">
+              {items.map((item) => (
+                <span key={item} className="label flex items-center gap-6 pr-6 text-[10px] whitespace-nowrap text-bone/80">
+                  {item}
+                  <svg viewBox="0 0 44.88 100" className="h-2.5 w-auto shrink-0 text-ember" fill="currentColor">
+                    <polygon points="0,0 14,0 44.88,50 14,100 0,100 30.88,50" />
+                  </svg>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
 
       <header

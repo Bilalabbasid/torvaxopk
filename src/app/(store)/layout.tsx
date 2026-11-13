@@ -8,7 +8,7 @@ export default async function StoreLayout({ children }: LayoutProps<'/'>) {
   const announcement =
     settings.announcement ||
     (settings.sale_mode === 'preorder'
-      ? `Preorder open · Lock in launch prices with a ${money(settings.deposit_amount)} deposit`
+      ? `German quality · EU standards · Preorder open · Preorder prices end at launch · ${money(settings.deposit_amount)} deposit · 2-year warranty`
       : `Now live · Launch buyers get ${settings.launch_coupon_percent}% off for a year`);
 
   return (

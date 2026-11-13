@@ -38,7 +38,7 @@ export default function CartPage() {
               <li key={line.variantId} className="hairline flex gap-5 border-b py-6 first:border-t">
                 <Link href={`/products/${line.productSlug}`} className="w-28 shrink-0 bg-paper sm:w-36">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={line.image} alt="" className="aspect-[4/5] w-full object-cover" />
+                  <img src={line.image} alt="" className="aspect-[4/5] w-full object-contain" />
                 </Link>
                 <div className="flex flex-1 flex-col">
                   <div className="flex justify-between gap-4">
@@ -52,7 +52,13 @@ export default function CartPage() {
                   </div>
                   <p className="mt-1 text-sm text-ink/60">
                     {money(line.unitPrice)} each
-                    {line.compareAt ? <s className="ml-2 text-steel">{money(line.compareAt)}</s> : null}
+                    {line.compareAt ? (
+                      quote.saleMode === 'preorder' ? (
+                        <span className="ml-2 text-steel-600">· preorder price, {money(line.compareAt)} after launch</span>
+                      ) : (
+                        <s className="ml-2 text-steel">{money(line.compareAt)}</s>
+                      )
+                    ) : null}
                   </p>
                   <div className="mt-auto flex items-center gap-4 pt-4">
                     <div className="flex h-9 items-center border border-ink/15">

@@ -31,19 +31,19 @@ begin
       (0, 'forward-cabin', 'Forward Cabin', 'CAB', 'cabin', 'Cabin', false,
        'Carry-on sized. Overhead-bin ready.',
        'The one that never leaves your side. Forward Cabin is sized for the overhead bin and built for the sprint to the gate: a ribbed hardshell, silent double spinners and a lock you never have to think about.',
-       12999, 8999, null::int, '20 inch', '55 × 37 × 21 cm', '2.9 kg', '38 L', 'Weekends and 1–3 day trips', 42, 28, 17),
+       14499, 10499, null::int, '20 inch', '55 × 37 × 21 cm', '2.9 kg', '38 L', 'Weekends and 1–3 day trips', 42, 28, 17),
       (1, 'forward-medium', 'Forward Medium', 'MED', 'medium', 'Medium', false,
        'The week-away workhorse.',
        'Room for a full week without the bulk. Forward Medium checks in light, rolls straight and keeps everything where you packed it with a zipped divider and compression straps.',
-       17999, 12499, null, '24 inch', '66 × 44 × 26 cm', '3.7 kg', '68 L', 'Trips of 4–7 days', 35, 22, 6),
+       19499, 13999, null, '24 inch', '66 × 44 × 26 cm', '3.7 kg', '68 L', 'Trips of 4–7 days', 35, 22, 6),
       (2, 'forward-large', 'Forward Large', 'LRG', 'large', 'Large', false,
        'Maximum volume. Zero drama.',
        'For the long haul and the heavy packers. Forward Large swallows two weeks of gear and still glides on four detachable double spinners.',
-       25499, 17499, null, '28 inch', '76 × 50 × 30 cm', '4.5 kg', '102 L', 'Trips of 8 days and longer', 26, 14, 9),
+       26999, 18999, null, '28 inch', '76 × 50 × 30 cm', '4.5 kg', '102 L', 'Trips of 8 days and longer', 26, 14, 9),
       (3, 'forward-set-of-three', 'Forward Set of Three', 'SET', 'set', 'Set of 3', true,
        'Cabin, Medium and Large. One matched set.',
        'Every trip covered. The complete Forward line in one colour, nesting inside each other for storage and priced well below buying the three pieces separately.',
-       51000, 35000, 56497, null, null, null, null, null, 12, 8, 6)
+       51000, 35000, 60997, null, null, null, null, null, 12, 8, 6)
     ) as t(pos, slug, name, sku, image, size_label, is_set, tagline, description, price, preorder_price, compare_at,
            inches, dims, weight, volume, fit, stock_black, stock_graphite, stock_glacier)
   loop

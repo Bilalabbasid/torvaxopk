@@ -24,7 +24,8 @@ export const INFO_PAGES: Record<string, InfoPage> = {
       {
         heading: 'Preorder pricing',
         body: [
-          'Before the sale goes live, every Forward case can be preordered at a reduced preorder price. The Forward Set of Three is Rs 35,000 on preorder against Rs 51,000 at launch.',
+          'Before the sale goes live, every Forward case can be preordered at a lower preorder price. This is not a discount or a sale: it is a price for preorders only. Once we launch, every case goes to its regular price.',
+          'Preordered one by one, the three cases come to Rs 43,497 (Rs 10,499 + Rs 13,999 + Rs 18,999). Preordered as a Set of Three they are Rs 35,000, which saves Rs 8,497. After launch the set is Rs 51,000.',
           `To lock in your preorder price you pay a deposit of ${money(s.deposit_amount)} today by card, JazzCash or Easypaisa. The rest is due when your order is ready to ship.`,
         ],
       },

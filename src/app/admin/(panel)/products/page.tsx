@@ -48,7 +48,7 @@ export default async function ProductsPage(props: PageProps<'/admin/products'>) 
                 <tr key={p.id} className="hover:bg-bone/50">
                   <td className="w-16">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {image ? <img src={image.url} alt="" className="aspect-square w-12 bg-paper object-cover" /> : <div className="size-12 bg-paper" />}
+                    {image ? <img src={image.url} alt="" className="aspect-square w-12 bg-paper object-contain" /> : <div className="size-12 bg-paper" />}
                   </td>
                   <td>
                     <Link href={`/admin/products/${p.id}`} className="font-medium hover:text-ember-600">

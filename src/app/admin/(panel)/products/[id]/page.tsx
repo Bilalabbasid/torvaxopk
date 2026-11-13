@@ -64,7 +64,7 @@ export default async function EditProductPage(props: PageProps<'/admin/products/
           {product.product_images.map((img) => (
             <div key={img.id} className="border border-ink/10">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.url} alt={img.alt} className="aspect-[4/3] w-full bg-paper object-cover" />
+              <img src={img.url} alt={img.alt} className="aspect-[4/3] w-full bg-paper object-contain" />
               <form action={updateImage} className="space-y-2 p-3 text-xs">
                 <input type="hidden" name="id" value={img.id} />
                 <input type="hidden" name="product_id" value={product.id} />

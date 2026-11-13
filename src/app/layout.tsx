@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: 'Torvaxo Pakistan — Elegance endures.', template: '%s · Torvaxo Pakistan' },
   description:
-    'Hardshell luggage built to look as good on its hundredth trip as on its first. The Forward series — now in Pakistan. Preorder at launch prices.',
+    'Torvaxo is a German luggage brand. Hardshell cases built to EU quality standards, with a TSA lock, replaceable wheels and a 2-year warranty. The Forward series, now in Pakistan.',
   openGraph: { type: 'website', locale: 'en_PK', siteName: 'Torvaxo Pakistan', images: ['/images/hero-trio.jpg'] },
 };
 

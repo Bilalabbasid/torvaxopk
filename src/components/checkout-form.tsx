@@ -168,7 +168,7 @@ export function CheckoutForm({ testMode }: { testMode: boolean }) {
                 {quote.lines.map((l) => (
                   <li key={l.variantId} className="flex gap-4 text-sm">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={l.image} alt="" className="aspect-[4/5] w-14 bg-paper object-cover" />
+                    <img src={l.image} alt="" className="aspect-[4/5] w-14 bg-paper object-contain" />
                     <div className="flex-1">
                       <p className="font-medium">{l.productName}</p>
                       <p className="text-ink/60">
