@@ -4,12 +4,17 @@ import pg from 'pg';
 
 const { Client } = pg;
 
-// Read config from environment or fallback to detected pooler
-const host = process.env.SUPABASE_DB_HOST || 'aws-0-ap-northeast-1.pooler.supabase.com';
+// Connection details come from the environment only (.env.local via `npm run db:migrate`).
+const host = process.env.SUPABASE_DB_HOST;
 const port = parseInt(process.env.SUPABASE_DB_PORT || '5432', 10);
-const user = process.env.SUPABASE_DB_USER || 'postgres.ltvlssjubyjeoftwsgsr';
-const password = process.env.SUPABASE_DB_PASSWORD || 'bE61WAIfgLgteMWR';
+const user = process.env.SUPABASE_DB_USER;
+const password = process.env.SUPABASE_DB_PASSWORD;
 const database = process.env.SUPABASE_DB_NAME || 'postgres';
+
+if (!host || !user || !password) {
+  console.error('Set SUPABASE_DB_HOST, SUPABASE_DB_USER and SUPABASE_DB_PASSWORD in .env.local first.');
+  process.exit(1);
+}
 
 console.log(`Connecting to ${host}:${port} as ${user}...`);
 
