@@ -1,0 +1,172 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
+/*
+ | Torvaxo design tokens (Brand Identity V1, shared with the German shop):
+ | Ink #0E0E10 · Bone #F4F2EE · Ember #F0561F · Steel #8A8D91
+ | "paper" matches the studio backdrop of the product photography.
+ */
+@theme {
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --color-ink: #0e0e10;
+  --color-ink-900: #131316;
+  --color-ink-800: #1a1a1e;
+  --color-ink-700: #26262b;
+  --color-ink-600: #36363c;
+  --color-bone: #f4f2ee;
+  --color-bone-200: #e8e5df;
+  --color-bone-300: #d8d4cc;
+  --color-paper: #f5f0eb;
+  --color-ember: #f0561f;
+  --color-ember-600: #d94712;
+  --color-steel: #8a8d91;
+  --color-steel-600: #5f6266;
+  --color-ok: #1f7a4d;
+  --color-warn: #a15c00;
+  --color-bad: #b3261e;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-drift: drift 28s linear infinite;
+  @keyframes drift {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+}
+
+/* The small letter-spaced caption from the brand board. */
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+@utility btn {
+  @apply inline-flex h-12 items-center justify-center gap-3 px-6 text-sm font-medium whitespace-nowrap transition-colors duration-200 disabled:opacity-50;
+}
+
+@utility btn-primary {
+  @apply btn bg-ink text-bone hover:bg-ember hover:text-ink;
+}
+
+@utility btn-outline {
+  @apply btn border border-ink/20 text-ink hover:border-ink;
+}
+
+@utility btn-ember {
+  @apply btn bg-ember text-ink hover:bg-ember-600;
+}
+
+@utility btn-sm {
+  @apply h-9 px-4 text-[13px];
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-bone font-sans text-ink;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  ::selection {
+    background: var(--color-ember);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ember);
+    outline-offset: 3px;
+  }
+
+  button,
+  [role='button'],
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@layer components {
+  .container-x {
+    @apply mx-auto w-full max-w-[1440px] px-5 sm:px-8 lg:px-12;
+  }
+
+  .display {
+    @apply font-medium tracking-[-0.045em];
+    line-height: 0.95;
+  }
+
+  .hairline {
+    @apply border-ink/10;
+  }
+
+  .input {
+    @apply h-12 w-full border border-ink/15 bg-white/60 px-4 text-[15px] text-ink transition-colors duration-150 placeholder:text-steel;
+  }
+
+  .input:hover {
+    @apply border-ink/30;
+  }
+
+  .input:focus {
+    @apply border-ink bg-white outline-none;
+  }
+
+  .input[aria-invalid='true'] {
+    @apply border-bad;
+  }
+
+  textarea.input {
+    @apply h-auto py-3;
+  }
+
+  .admin-card {
+    @apply border border-ink/10 bg-white;
+  }
+
+  .admin-table {
+    @apply w-full border-collapse;
+  }
+
+  .admin-table th {
+    @apply label border-b border-ink/10 px-4 py-3 text-left font-medium text-steel-600;
+  }
+
+  .admin-table td {
+    @apply border-b border-ink/5 px-4 py-3.5 align-middle text-sm;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-[13px] font-medium text-ink/80;
+  }
+
+  .hero-image {
+    mask-image:
+      linear-gradient(to right, transparent, #000 9%, #000 100%),
+      linear-gradient(to bottom, transparent, #000 8%, #000 90%, transparent);
+    mask-composite: intersect;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

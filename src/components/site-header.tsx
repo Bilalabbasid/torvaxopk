@@ -1,0 +1,113 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useCartCount } from '@/lib/cart-store';
+import { Logo } from './brand';
+
+const links = [
+  { label: 'Shop', href: '/shop' },
+  { label: 'Technology', href: '/#technology' },
+  { label: 'Colours', href: '/#colours' },
+  { label: 'Preorder & launch', href: '/launch' },
+];
+
+export function SiteHeader({ announcement }: { announcement: string }) {
+  const count = useCartCount();
+  const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const menuOpen = openPath === pathname; // closes itself on navigation
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <>
+      <div className="bg-ink text-bone">
+        <p className="container-x label flex min-h-9 items-center justify-center gap-3 py-2 text-center text-[10px] text-bone/80">
+          <svg viewBox="0 0 44.88 100" className="h-2.5 w-auto shrink-0 text-ember" fill="currentColor" aria-hidden="true">
+            <polygon points="0,0 14,0 44.88,50 14,100 0,100 30.88,50" />
+          </svg>
+          {announcement}
+        </p>
+      </div>
+
+      <header
+        className={`sticky top-0 z-40 border-b transition-[background-color,border-color] duration-300 ${
+          scrolled || menuOpen ? 'hairline bg-bone/85 backdrop-blur-xl' : 'border-transparent bg-bone'
+        }`}
+      >
+        <div className="container-x grid h-16 grid-cols-[1fr_auto_1fr] items-center">
+          <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
+            {links.map((link) => (
+              <Link key={link.href} href={link.href} className="py-2 text-sm text-ink/70 transition-colors hover:text-ink">
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          <button
+            className="-ml-2 grid size-10 place-items-center md:hidden"
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            aria-label="Menu"
+            onClick={() => setOpenPath(menuOpen ? null : pathname)}
+          >
+            <span className="relative block h-3 w-5">
+              <span className={`absolute left-0 h-px w-full bg-ink transition-transform ${menuOpen ? 'top-1.5 rotate-45' : 'top-0'}`} />
+              <span className={`absolute left-0 h-px w-full bg-ink transition-transform ${menuOpen ? 'top-1.5 -rotate-45' : 'top-3'}`} />
+            </span>
+          </button>
+
+          <Link href="/" aria-label="Torvaxo home" className="justify-self-center">
+            <Logo className="h-[18px] w-auto" />
+          </Link>
+
+          <div className="flex items-center justify-end">
+            <Link
+              href="/cart"
+              className="relative flex h-10 items-center gap-2 pr-1 pl-2 text-ink/70 transition-colors hover:text-ink"
+              aria-label={`Cart, ${count} item${count === 1 ? '' : 's'}`}
+            >
+              <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
+                <rect x="5" y="8" width="14" height="12" rx="1.5" />
+                <path d="M9 8V6.5a3 3 0 0 1 6 0V8" />
+              </svg>
+              <span
+                className={`grid h-5 min-w-5 place-items-center rounded-full px-1 font-mono text-[11px] tabular-nums ${
+                  count ? 'bg-ink text-bone' : 'bg-ink/10 text-ink/50'
+                }`}
+              >
+                {count}
+              </span>
+            </Link>
+          </div>
+        </div>
+
+        {menuOpen && (
+          <nav id="mobile-menu" className="hairline border-t md:hidden" aria-label="Mobile">
+            <div className="container-x flex flex-col py-3">
+              {links.map((link, i) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpenPath(null)}
+                  className="hairline flex items-center justify-between border-b py-4 text-2xl tracking-tight last:border-0"
+                >
+                  {link.label}
+                  <span className="label text-steel">0{i + 1}</span>
+                </Link>
+              ))}
+            </div>
+          </nav>
+        )}
+      </header>
+    </>
+  );
+}
