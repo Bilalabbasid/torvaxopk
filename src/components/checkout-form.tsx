@@ -63,6 +63,93 @@ export function CheckoutForm({ testMode }: { testMode: boolean }) {
     });
   }
 
+  // Progress at a glance: a step lights up once its required fields are filled.
+  const filled = (...fields: Field[]) => fields.every((f) => form[f].trim().length > 1);
+  const steps = [
+    { label: 'Contact', done: /.+@.+\..+/.test(form.email) && form.phone.replace(/\D/g, '').length >= 10 },
+    { label: 'Delivery', done: filled('name', 'address_line1', 'city') && Boolean(form.province) },
+    { label: 'Payment', done: Boolean(chosen) },
+  ];
+  const afterDiscount = quote ? quote.totals.subtotal - quote.totals.discount : 0;
+  const toFreeDelivery = quote && quote.freeShippingFrom > 0 ? quote.freeShippingFrom - afterDiscount : 0;
+
+  const summary = quote ? (
+    <>
+      <ul className="mb-6 space-y-4">
+        {quote.lines.map((l) => (
+          <li key={l.key} className="flex gap-4 text-sm">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={l.image} alt="" className="aspect-[4/5] w-14 bg-paper object-contain" />
+            <div className="flex-1">
+              <p className="font-medium">{l.productName}</p>
+              <p className="text-ink/60">
+                {l.variantLabel} × {l.quantity}
+              </p>
+            </div>
+            <span className="font-mono tabular-nums">{money(l.lineTotal)}</span>
+          </li>
+        ))}
+      </ul>
+      {quote.problems.map((p) => (
+        <p key={p} className="mb-3 text-sm text-warn">
+          {p}
+        </p>
+      ))}
+
+      <div className="hairline mb-5 border-t pt-5">
+        <span className="field-label">Discount code</span>
+        <div className="flex gap-2">
+          <input
+            className="input h-10 uppercase"
+            value={couponInput}
+            onChange={(e) => setCouponInput(e.target.value)}
+            placeholder="TORVAXO-XXXXXX"
+            aria-invalid={coupon && quote.couponError ? true : undefined}
+          />
+          {coupon ? (
+            <button
+              type="button"
+              className="btn-outline btn-sm h-10"
+              onClick={() => {
+                setCoupon('');
+                setCouponInput('');
+              }}
+            >
+              Remove
+            </button>
+          ) : (
+            <button type="button" className="btn-outline btn-sm h-10" onClick={() => setCoupon(couponInput.trim())} disabled={!couponInput.trim()}>
+              Apply
+            </button>
+          )}
+        </div>
+        {coupon && quote.couponError ? <p className="mt-1 text-xs text-bad">{quote.couponError}</p> : null}
+        {coupon && quote.coupon ? <p className="mt-1 text-xs text-ok">{quote.coupon.percent}% off applied.</p> : null}
+      </div>
+
+      <TotalsTable quote={quote} />
+
+      {toFreeDelivery > 0 ? (
+        <p className="hairline mt-5 border-t pt-4 text-[13px] text-ink/70">
+          Add {money(toFreeDelivery)} more and delivery is free.{' '}
+          <Link href="/shop" className="underline underline-offset-4 hover:text-ember-600">
+            Keep shopping
+          </Link>
+        </p>
+      ) : null}
+      <ul className="hairline mt-5 space-y-2 border-t pt-4 text-[13px] text-ink/70">
+        {['German quality, built to EU standards', '7 days to return it', '2-year warranty, wheels you replace yourself'].map((line) => (
+          <li key={line} className="flex items-center gap-2.5">
+            <svg viewBox="0 0 44.88 100" className="h-2.5 w-auto shrink-0 text-ember" fill="currentColor" aria-hidden="true">
+              <polygon points="0,0 14,0 44.88,50 14,100 0,100 30.88,50" />
+            </svg>
+            {line}
+          </li>
+        ))}
+      </ul>
+    </>
+  ) : null;
+
   if (empty) {
     return (
       <section className="container-x py-20">
@@ -93,7 +180,51 @@ export function CheckoutForm({ testMode }: { testMode: boolean }) {
   return (
     <form onSubmit={submit} className="container-x grid gap-12 py-12 lg:grid-cols-12 lg:py-16" noValidate>
       <div className="lg:col-span-7">
-        <h1 className="display text-5xl sm:text-6xl">{preorder ? 'Preorder checkout' : 'Checkout'}</h1>
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
+          <h1 className="display text-5xl sm:text-6xl">{preorder ? 'Preorder checkout' : 'Checkout'}</h1>
+          <ol className="flex items-center gap-3" aria-label="Checkout progress">
+            {steps.map((step, i) => (
+              <li key={step.label} className="flex items-center gap-3">
+                {i ? (
+                  <svg
+                    viewBox="0 0 44.88 100"
+                    className={`h-3 w-auto transition-colors duration-300 ${steps[i - 1].done ? 'text-ember' : 'text-ink/15'}`}
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <polygon points="0,0 14,0 44.88,50 14,100 0,100 30.88,50" />
+                  </svg>
+                ) : null}
+                <span className={`label flex items-center gap-2 text-[10px] transition-colors duration-300 ${step.done ? 'text-ink' : 'text-steel'}`}>
+                  <span
+                    className={`grid size-4 place-items-center rounded-full text-[9px] transition-colors duration-300 ${
+                      step.done ? 'bg-ink text-bone' : 'bg-ink/10 text-ink/40'
+                    }`}
+                  >
+                    {step.done ? '✓' : i + 1}
+                  </span>
+                  {step.label}
+                  <span className="sr-only">{step.done ? ' (complete)' : ''}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        {/* Small screens: the summary is folded away at the top instead of hidden below the form. */}
+        {quote ? (
+          <details className="hairline group mt-8 border-y lg:hidden">
+            <summary className="flex list-none items-center justify-between py-4 text-sm [&::-webkit-details-marker]:hidden">
+              <span className="flex items-center gap-2">
+                <span className="transition-transform duration-300 group-open:rotate-45">+</span>
+                <span className="group-open:hidden">Show order summary</span>
+                <span className="hidden group-open:inline">Hide order summary</span>
+              </span>
+              <span className="font-mono text-base tabular-nums">{money(quote.totals.total)}</span>
+            </summary>
+            <div className={`pb-6 ${loading ? 'opacity-60' : ''}`}>{summary}</div>
+          </details>
+        ) : null}
         {testMode ? (
           <p className="mt-6 border border-warn/40 bg-warn/5 px-4 py-3 text-sm text-warn">
             Test mode: payments go to a built-in test screen. No money is taken. Set PAYMENTS_MODE=live with real gateway keys to
@@ -155,76 +286,52 @@ export function CheckoutForm({ testMode }: { testMode: boolean }) {
             </p>
           ) : null}
         </fieldset>
+
+        <button
+          type="submit"
+          className="btn-primary mt-10 h-14 w-full"
+          disabled={pending || loading || !quote || !quote.lines.length || quote.problems.length > 0 || Boolean(coupon && quote.couponError)}
+        >
+          {pending
+            ? 'Placing order…'
+            : !quote
+              ? 'Checkout'
+              : preorder
+                ? `Pay ${money(quote.totals.dueNow)} deposit`
+                : chosen === 'cod'
+                  ? `Place order · ${money(quote.totals.total)}`
+                  : `Pay ${money(quote.totals.total)}`}
+          {!pending ? <Chevrons count={3} className="h-3 w-auto text-ember" /> : null}
+        </button>
+        <p className="mt-4 flex items-center justify-center gap-2 text-center text-[13px] text-steel-600">
+          <svg viewBox="0 0 16 16" className="size-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+            <rect x="3" y="7" width="10" height="7" rx="1" />
+            <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+          </svg>
+          Card and wallet details are entered on the payment provider&apos;s secure page.
+        </p>
+        <p className="mt-3 text-center text-xs leading-relaxed text-ink/50">
+          By placing your order you agree to our{' '}
+          <Link href="/terms" className="underline">
+            terms of sale
+          </Link>{' '}
+          and{' '}
+          <Link href="/privacy" className="underline">
+            privacy policy
+          </Link>
+          .
+        </p>
       </div>
 
-      <aside className="lg:col-span-5">
-        <div className="admin-card sticky top-24 p-6">
-          <p className="label mb-5 text-steel-600">Your order</p>
-          {!quote ? (
-            <div className="h-40 animate-pulse bg-paper" />
-          ) : (
-            <div className={loading ? 'opacity-60' : ''}>
-              <ul className="mb-6 space-y-4">
-                {quote.lines.map((l) => (
-                  <li key={l.key} className="flex gap-4 text-sm">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={l.image} alt="" className="aspect-[4/5] w-14 bg-paper object-contain" />
-                    <div className="flex-1">
-                      <p className="font-medium">{l.productName}</p>
-                      <p className="text-ink/60">
-                        {l.variantLabel} × {l.quantity}
-                      </p>
-                    </div>
-                    <span className="font-mono tabular-nums">{money(l.lineTotal)}</span>
-                  </li>
-                ))}
-              </ul>
-              {quote.problems.map((p) => (
-                <p key={p} className="mb-3 text-sm text-warn">
-                  {p}
-                </p>
-              ))}
-
-              <div className="hairline mb-5 border-t pt-5">
-                <span className="field-label">Discount code</span>
-                <div className="flex gap-2">
-                  <input
-                    className="input h-10 uppercase"
-                    value={couponInput}
-                    onChange={(e) => setCouponInput(e.target.value)}
-                    placeholder="TORVAXO-XXXXXX"
-                    aria-invalid={coupon && quote.couponError ? true : undefined}
-                  />
-                  {coupon ? (
-                    <button type="button" className="btn-outline btn-sm h-10" onClick={() => { setCoupon(''); setCouponInput(''); }}>
-                      Remove
-                    </button>
-                  ) : (
-                    <button type="button" className="btn-outline btn-sm h-10" onClick={() => setCoupon(couponInput.trim())} disabled={!couponInput.trim()}>
-                      Apply
-                    </button>
-                  )}
-                </div>
-                {coupon && quote.couponError ? <p className="mt-1 text-xs text-bad">{quote.couponError}</p> : null}
-                {coupon && quote.coupon ? <p className="mt-1 text-xs text-ok">{quote.coupon.percent}% off applied.</p> : null}
-              </div>
-
-              <TotalsTable quote={quote} />
-              <button
-                type="submit"
-                className="btn-primary mt-6 w-full"
-                disabled={pending || loading || !quote.lines.length || quote.problems.length > 0 || Boolean(coupon && quote.couponError)}
-              >
-                {pending ? 'Placing order…' : preorder ? `Pay ${money(quote.totals.dueNow)} deposit` : chosen === 'cod' ? 'Place order' : `Pay ${money(quote.totals.total)}`}
-                {!pending ? <Chevrons count={3} className="h-3 w-auto text-ember" /> : null}
-              </button>
-              <p className="mt-4 text-xs leading-relaxed text-ink/50">
-                By placing your order you agree to our <Link href="/terms" className="underline">terms of sale</Link> and{' '}
-                <Link href="/privacy" className="underline">privacy policy</Link>. Card and wallet details are entered on the payment
-                provider&apos;s secure page.
-              </p>
-            </div>
-          )}
+      <aside className="hidden lg:col-span-5 lg:block" aria-label="Order summary">
+        <div className="admin-card sticky top-24 p-6 sm:p-8">
+          <h2 className="label mb-6 flex justify-between text-steel-600">
+            Order summary
+            <Link href="/cart" className="tracking-normal normal-case underline underline-offset-4 hover:text-ink">
+              Edit
+            </Link>
+          </h2>
+          {!quote ? <div className="h-40 animate-pulse bg-paper" /> : <div className={loading ? 'opacity-60' : ''}>{summary}</div>}
         </div>
       </aside>
     </form>

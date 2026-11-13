@@ -46,6 +46,19 @@ export interface Quote {
   couponError: string | null;
   problems: string[];
   paymentMethods: PaymentMethod[];
+  /** Delivery is free from this subtotal (0 = never free). */
+  freeShippingFrom: number;
+  /** One quiet cross-sell: the next case not in the cart yet, in the colour last chosen. */
+  suggestion: CartSuggestion | null;
+}
+
+export interface CartSuggestion {
+  variantId: string;
+  productName: string;
+  productSlug: string;
+  colorName: string;
+  price: number;
+  image: string;
 }
 
 export function availableMethods(settings: Settings, purpose: 'deposit' | 'full' | 'balance'): PaymentMethod[] {
@@ -133,6 +146,8 @@ export async function quoteCart(
 
   return {
     saleMode: settings.sale_mode,
+    freeShippingFrom: settings.shipping_free_from,
+    suggestion: lines.length ? await suggestFor(lines, variants, settings.sale_mode) : null,
     lines,
     totals,
     coupon: couponRow ? { code: couponRow.code, percent: couponRow.percent } : null,
@@ -141,6 +156,32 @@ export async function quoteCart(
     problems,
     paymentMethods: availableMethods(settings, settings.sale_mode === 'preorder' && totals.dueLater > 0 ? 'deposit' : 'full'),
   };
+}
+
+/** The next single case not in the cart, in the colour of the last line. None once the set is in the cart. */
+async function suggestFor(
+  lines: QuoteLine[],
+  variants: Awaited<ReturnType<typeof getVariantsWithProducts>>,
+  mode: Settings['sale_mode'],
+): Promise<CartSuggestion | null> {
+  if (variants.some((v) => v.products.is_set)) return null;
+  const catalogue = await listActiveProducts();
+  const inCart = new Set(lines.map((l) => l.productSlug));
+  const colour = variants.find((v) => v.id === lines[lines.length - 1].variantId)?.color_name;
+  for (const product of catalogue) {
+    if (product.is_set || inCart.has(product.slug)) continue;
+    const variant = product.product_variants.find((v) => v.color_name === colour && v.stock > 0);
+    if (!variant) continue;
+    return {
+      variantId: variant.id,
+      productName: product.name,
+      productSlug: product.slug,
+      colorName: variant.color_name,
+      price: unitPrice(variant, mode).price,
+      image: imageForVariant(product.product_images, variant.id),
+    };
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------

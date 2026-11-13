@@ -17,6 +17,18 @@ export function SiteHeader({ announcement }: { announcement: string }) {
   const count = useCartCount();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  // A small pulse on the cart count whenever something is added.
+  const [bump, setBump] = useState(false);
+  const [lastCount, setLastCount] = useState(count);
+  if (count !== lastCount) {
+    setLastCount(count);
+    if (count > lastCount) setBump(true);
+  }
+  useEffect(() => {
+    if (!bump) return;
+    const t = window.setTimeout(() => setBump(false), 450);
+    return () => window.clearTimeout(t);
+  }, [bump]);
   const [openPath, setOpenPath] = useState<string | null>(null);
   const menuOpen = openPath === pathname; // closes itself on navigation
   // "A · B · C" scrolls as separate items.
@@ -60,8 +72,9 @@ export function SiteHeader({ announcement }: { announcement: string }) {
         <div className="container-x grid h-16 grid-cols-[1fr_auto_1fr] items-center">
           <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
             {links.map((link) => (
-              <Link key={link.href} href={link.href} className="py-2 text-sm text-ink/70 transition-colors hover:text-ink">
+              <Link key={link.href} href={link.href} className="group relative py-2 text-sm text-ink/70 transition-colors hover:text-ink">
                 {link.label}
+                <span className="absolute inset-x-0 bottom-1 h-px origin-left scale-x-0 bg-ink transition-transform duration-300 ease-out-expo group-hover:scale-x-100" />
               </Link>
             ))}
           </nav>
@@ -94,8 +107,8 @@ export function SiteHeader({ announcement }: { announcement: string }) {
                 <path d="M9 8V6.5a3 3 0 0 1 6 0V8" />
               </svg>
               <span
-                className={`grid h-5 min-w-5 place-items-center rounded-full px-1 font-mono text-[11px] tabular-nums ${
-                  count ? 'bg-ink text-bone' : 'bg-ink/10 text-ink/50'
+                className={`grid h-5 min-w-5 place-items-center rounded-full px-1 font-mono text-[11px] tabular-nums transition-all duration-300 ${
+                  bump ? 'scale-125 bg-ember text-ink' : count ? 'bg-ink text-bone' : 'bg-ink/10 text-ink/50'
                 }`}
               >
                 {count}

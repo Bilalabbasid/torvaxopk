@@ -1,9 +1,11 @@
+import type React from 'react';
 import Link from 'next/link';
 import { Chevrons } from '@/components/brand';
 import { ColourStory } from '@/components/colour-story';
 import { PriceTag, ProductCard, priceRange, singlePrices } from '@/components/product-card';
+import { TripPicker, type TripOption } from '@/components/trip-picker';
 import { getSettings, listActiveProducts } from '@/lib/catalog';
-import { money } from '@/lib/pricing';
+import { money, unitPrice } from '@/lib/pricing';
 
 const technology = [
   {
@@ -26,9 +28,6 @@ const technology = [
   },
 ];
 
-// Rows of the size guide, matched by label against each case's specs (edited in Admin → Products).
-const sizeRows = ['Size', 'Dimensions', 'Volume', 'Weight', 'Best for'];
-
 const marquee = ['German quality', 'Built to EU standards', 'Elegance endures', 'TSA lock built in', 'Detachable spinners', '2-year warranty', 'Three sizes', 'Three colours', 'Delivered across Pakistan'];
 
 export default async function HomePage() {
@@ -42,6 +41,30 @@ export default async function HomePage() {
   const separate = singlePrices(products, mode);
   const separateTotal = separate.reduce((sum, p) => sum + p, 0);
   const setSaving = setPrice && separate.length > 1 ? separateTotal - setPrice.price : 0;
+  const spec = (p: (typeof singles)[number], label: string) => p.specs.find((x) => x.label === label)?.value;
+  const tripOptions: TripOption[] = singles.map((p) => {
+    const variant = p.product_variants.find((v) => v.stock > 0) ?? p.product_variants[0];
+    const own = p.product_images.filter((img) => img.variant_id === variant?.id);
+    const image = own.find((img) => img.is_listing) ?? own[0] ?? p.product_images[0];
+    const { price, compareAt } = variant ? unitPrice(variant, mode) : { price: priceRange(p, mode).price, compareAt: null };
+    return {
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      sizeLabel: p.size_label,
+      inches: (spec(p, 'Size') ?? p.size_label).replace(/\s*inch$/i, '″'),
+      bestFor: spec(p, 'Best for') ?? p.tagline,
+      facts: ['Dimensions', 'Volume', 'Weight'].flatMap((label) => {
+        const value = spec(p, label);
+        return value ? [{ label, value }] : [];
+      }),
+      variantId: variant?.id ?? null,
+      soldOut: !variant || variant.stock <= 0,
+      price,
+      afterLaunch: preorder ? compareAt : null,
+      image: image ? { url: image.url, alt: image.alt } : null,
+    };
+  });
 
   return (
     <>
@@ -118,74 +141,104 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* Origin */}
-      <section className="container-x pt-14 lg:pt-20">
-        <div className="grid items-end gap-8 lg:grid-cols-12">
-          <div className="lg:col-span-6">
-            <p className="label text-steel-600">From Germany</p>
-            <h2 className="display mt-4 text-5xl sm:text-6xl">
-              German quality.
-              <br />
-              EU standards.
-            </h2>
-            <p className="mt-6 max-w-md text-lg leading-relaxed text-ink/70">
-              Torvaxo is a German luggage brand. The Forward series is built to the quality standards of the European
-              market, and that is the case we deliver in Pakistan.
+      {/* Origin: a dark band of big figures, in the style of the product page's key figures. */}
+      <section className="bg-ink text-bone">
+        <div className="container-x pt-20 lg:pt-28">
+          <div className="grid items-end gap-8 lg:grid-cols-12">
+            <div className="lg:col-span-7">
+              <p className="reveal label text-ember">From Germany</p>
+              <h2 className="reveal display mt-4 text-5xl sm:text-6xl lg:text-7xl" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
+                German quality.
+                <br />
+                EU standards.
+              </h2>
+            </div>
+            <p
+              className="reveal max-w-md text-lg leading-relaxed text-bone/65 lg:col-span-4 lg:col-start-9"
+              style={{ '--reveal-delay': '140ms' } as React.CSSProperties}
+            >
+              Torvaxo is a German luggage brand. The Forward series is built to the quality standards of the European market,
+              and that is the case we deliver in Pakistan.
             </p>
           </div>
-          <dl className="hairline border-t lg:col-span-5 lg:col-start-8">
+          <dl className="mt-14 grid grid-cols-2 border-t border-bone/10 lg:mt-20 lg:grid-cols-4">
             {[
-              ['Origin', 'German brand'],
-              ['Quality', 'Built to EU standards'],
-              ['Warranty', '2 years'],
-              ['Security', 'TSA lock built into the frame'],
-              ['Repairable', 'Wheels detach and replace'],
-            ].map(([label, value]) => (
-              <div key={label} className="hairline grid grid-cols-3 gap-4 border-b py-3">
-                <dt className="label pt-1 text-steel-600">{label}</dt>
-                <dd className="col-span-2">{value}</dd>
+              ['DE', 'Origin', 'A German brand'],
+              ['EU', 'Quality', 'Built to EU standards'],
+              ['2 yrs', 'Warranty', 'On every case'],
+              ['4', 'Wheels', 'Detach and replace'],
+            ].map(([figure, label, text], i) => (
+              <div
+                key={label}
+                className="reveal border-bone/10 py-10 pr-4 lg:border-l lg:py-14 lg:pl-8 lg:first:border-l-0 lg:first:pl-0 [&:nth-child(even)]:border-l [&:nth-child(even)]:pl-6 [&:nth-child(n+3)]:border-t lg:[&:nth-child(n+3)]:border-t-0"
+                style={{ '--reveal-delay': `${i * 70}ms` } as React.CSSProperties}
+              >
+                <dt className="label text-[10px] text-ember">{label}</dt>
+                <dd className="mt-4">
+                  <span className="display block text-5xl sm:text-6xl">{figure}</span>
+                  <span className="mt-3 block text-sm text-bone/55">{text}</span>
+                </dd>
               </div>
             ))}
           </dl>
         </div>
       </section>
 
-      {/* Offer */}
-      <section className="container-x pt-12 lg:pt-16">
-        <div className="grid gap-px bg-ink/10 md:grid-cols-3">
+      {/* Offer: three steps in a row, joined by the forward chevrons, on their own paper band. */}
+      <section className="hairline border-b bg-paper">
+        <div className="container-x py-20 lg:py-28">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <div>
+            <p className="reveal label text-steel-600">{preorder ? 'How preorder works' : 'Launch reward'}</p>
+            <h2 className="reveal display mt-4 text-4xl sm:text-5xl" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
+              {preorder ? 'Lock your price today.' : 'Buy now, save all year.'}
+            </h2>
+          </div>
+          <Link href="/launch" className="label border-b border-ink pb-1 transition-colors hover:border-ember hover:text-ember-600">
+            Read more
+          </Link>
+        </div>
+        <ol className="mt-10 grid gap-y-10 md:grid-cols-3 md:gap-x-10 lg:mt-14 lg:gap-x-14">
           {(preorder
             ? [
                 [
-                  '01',
                   'Preorder price',
                   setPrice?.compareAt
-                    ? `Not a sale or a discount: a lower price for preorders only. The Set of Three is ${money(setPrice.price)} now and ${money(setPrice.compareAt)} after launch.`
-                    : 'Not a sale or a discount: a lower price for preorders only. Every case goes to its regular price at launch.',
+                    ? `A lower price for preorders only, not a sale. The Set of Three is ${money(setPrice.price)} now and ${money(setPrice.compareAt)} after launch.`
+                    : 'A lower price for preorders only, not a sale. Every case goes to its regular price at launch.',
                 ],
-                ['02', `${money(settings.deposit_amount)} deposit`, 'Lock your price with a small deposit by card, JazzCash or Easypaisa. Pay the rest when it ships.'],
-                ['03', 'Refundable', 'Changed your mind before dispatch? Your deposit comes back in full.'],
+                [`${money(settings.deposit_amount)} deposit`, 'Pay it today by card, JazzCash or Easypaisa. The rest is due when your order ships.'],
+                ['Fully refundable', 'Changed your mind before dispatch? Your deposit comes back in full.'],
               ]
             : [
-                ['01', 'Launch reward', `Every launch purchase earns a personal ${settings.launch_coupon_percent}% code for everything on torvaxo.pk.`],
-                ['02', 'Valid for a year', 'Use it as often as you like for 12 months with the email you ordered with.'],
-                ['03', 'Pay your way', 'Card, JazzCash, Easypaisa or cash on delivery anywhere in Pakistan.'],
+                ['Launch reward', `Every launch purchase earns a personal ${settings.launch_coupon_percent}% code for everything on torvaxo.pk.`],
+                ['Valid for a year', 'Use it as often as you like for 12 months with the email you ordered with.'],
+                ['Pay your way', 'Card, JazzCash, Easypaisa or cash on delivery anywhere in Pakistan.'],
               ]
-          ).map(([n, title, body]) => (
-            <div key={n} className="bg-bone p-8">
-              <p className="label text-ember-600">{n}</p>
-              <h2 className="mt-4 text-2xl font-medium tracking-tight">{title}</h2>
-              <p className="mt-3 text-ink/65">{body}</p>
-            </div>
+          ).map(([title, body], i) => (
+            <li
+              key={title}
+              className="reveal relative border-t border-ink pt-6"
+              style={{ '--reveal-delay': `${i * 90}ms` } as React.CSSProperties}
+            >
+              <div className="flex items-center justify-between">
+                <span className="display text-6xl text-ink/15 tabular-nums">0{i + 1}</span>
+                {i < 2 ? <Chevrons count={2} className="hidden h-4 w-auto text-ember md:block" /> : null}
+              </div>
+              <h3 className="mt-6 text-2xl font-medium tracking-tight">{title}</h3>
+              <p className="mt-3 max-w-sm leading-relaxed text-ink/65">{body}</p>
+            </li>
           ))}
+        </ol>
         </div>
       </section>
 
       {/* 02 Line-up */}
-      <section className="container-x py-20 lg:py-28">
+      <section className="container-x pt-24 pb-20 lg:pt-32 lg:pb-28">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="label text-steel-600">02 — The line-up</p>
-            <h2 className="display mt-4 text-5xl sm:text-6xl lg:text-7xl">
+            <p className="reveal label text-steel-600">02 — The line-up</p>
+            <h2 className="reveal display mt-4 text-5xl sm:text-6xl lg:text-7xl" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
               One shape.
               <br />
               Three sizes.
@@ -203,7 +256,7 @@ export default async function HomePage() {
         </div>
 
         {set && setPrice ? (
-          <Link href={`/products/${set.slug}`} className="group mt-16 grid overflow-hidden bg-ink text-bone lg:grid-cols-2">
+          <Link href={`/products/${set.slug}`} className="group mt-20 grid overflow-hidden bg-ink text-bone lg:mt-28 lg:grid-cols-2">
             <div className="flex flex-col justify-between gap-10 p-8 sm:p-12 lg:p-16">
               <p className="label text-ember">{preorder ? 'The complete set · Preorder' : 'The complete set'}</p>
               <div>
@@ -248,8 +301,8 @@ export default async function HomePage() {
         <div className="container-x py-20 lg:py-32">
           <div className="grid gap-8 lg:grid-cols-12">
             <div className="lg:col-span-7">
-              <p className="label text-ember">03 — Technology</p>
-              <h2 className="display mt-4 text-5xl sm:text-6xl lg:text-7xl">
+              <p className="reveal label text-ember">03 — Technology</p>
+              <h2 className="reveal display mt-4 text-5xl sm:text-6xl lg:text-7xl" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
                 Built for the
                 <br />
                 parts of travel
@@ -300,63 +353,16 @@ export default async function HomePage() {
         />
       ) : null}
 
-      {/* 05 Size guide */}
-      {singles.length > 1 ? (
-        <section id="size-guide" className="container-x py-20 lg:py-28">
-          <p className="label text-steel-600">05 — Size guide</p>
-          <h2 className="display mt-4 text-5xl sm:text-6xl lg:text-7xl">Which one is yours?</h2>
-          <div className="-mx-4 mt-12 overflow-x-auto px-4 lg:mt-16">
-            <table className="w-full min-w-[640px] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-ink">
-                  <th className="w-1/4 pb-5" />
-                  {singles.map((p) => (
-                    <th key={p.id} scope="col" className="pb-5 text-2xl font-medium tracking-tight sm:text-3xl">
-                      {p.size_label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sizeRows.map((label) => (
-                  <tr key={label} className="hairline border-b">
-                    <th scope="row" className="label py-5 pr-4 font-normal text-steel-600">
-                      {label}
-                    </th>
-                    {singles.map((p) => (
-                      <td key={p.id} className="py-5 pr-4">
-                        {p.specs.find((s) => s.label === label)?.value ?? '—'}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-                <tr className="hairline border-b">
-                  <th scope="row" className="label py-5 pr-4 font-normal text-steel-600">
-                    {preorder ? 'Preorder price' : 'Price'}
-                  </th>
-                  {singles.map((p) => {
-                    const { price, compareAt } = priceRange(p, mode);
-                    return (
-                      <td key={p.id} className="py-5 pr-4">
-                        <span className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                          <span className="font-mono tabular-nums">{money(price)}</span>
-                          <Link
-                            href={`/products/${p.slug}`}
-                            className="label border-b border-ink pb-0.5 text-[10px] transition-colors hover:border-ember hover:text-ember-600"
-                          >
-                            View
-                          </Link>
-                        </span>
-                        {preorder && compareAt ? (
-                          <span className="mt-1 block text-xs text-ink/60">{money(compareAt)} after launch</span>
-                        ) : null}
-                      </td>
-                    );
-                  })}
-                </tr>
-              </tbody>
-            </table>
-          </div>
+      {/* 05 Find your size */}
+      {tripOptions.length > 1 ? (
+        <section id="find-your-size" className="container-x pt-20 lg:pt-28">
+          <p className="reveal label text-steel-600">05 — Find your size</p>
+          <h2 className="reveal display mt-4 mb-12 text-5xl sm:text-6xl lg:mb-16 lg:text-7xl" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
+            How long are
+            <br />
+            you away?
+          </h2>
+          <TripPicker options={tripOptions} preorder={preorder} />
         </section>
       ) : null}
 
@@ -371,7 +377,7 @@ export default async function HomePage() {
           <rect width="100%" height="100%" fill="url(#forward-strip)" />
         </svg>
         <div className="container-x relative flex flex-wrap items-end justify-between gap-8 py-20 lg:py-28">
-          <h2 className="display text-6xl sm:text-7xl lg:text-8xl">
+          <h2 className="reveal display text-6xl sm:text-7xl lg:text-8xl">
             Move
             <br />
             forward.

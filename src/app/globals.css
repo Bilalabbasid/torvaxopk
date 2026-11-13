@@ -30,6 +30,12 @@
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
+  --animate-fade-in: fade-in 300ms ease-out;
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
   --animate-drift: drift 28s linear infinite;
   @keyframes drift {
     to {
@@ -153,6 +159,21 @@
     @apply mb-1.5 block text-[13px] font-medium text-ink/80;
   }
 
+  /* Scroll reveal, driven by <RevealOnScroll />. Only hides once JavaScript is running. */
+  .js-reveal .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.9s var(--ease-out-expo),
+      transform 0.9s var(--ease-out-expo);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  .js-reveal .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
   .hero-image {
     mask-image:
       linear-gradient(to right, transparent, #000 9%, #000 100%),
@@ -168,5 +189,10 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .js-reveal .reveal {
+    opacity: 1;
+    transform: none;
   }
 }

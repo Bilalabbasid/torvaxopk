@@ -1,3 +1,4 @@
+import { RevealOnScroll } from '@/components/reveal';
 import { SiteFooter } from '@/components/site-footer';
 import { SiteHeader } from '@/components/site-header';
 import { getSettings } from '@/lib/catalog';
@@ -16,6 +17,7 @@ export default async function StoreLayout({ children }: LayoutProps<'/'>) {
       <SiteHeader announcement={announcement} />
       <main className="flex-1">{children}</main>
       <SiteFooter settings={settings} />
+      <RevealOnScroll />
     </>
   );
 }

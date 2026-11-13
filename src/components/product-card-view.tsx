@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
+import { colourSlug } from '@/lib/colour';
 
 export interface CardColour {
   id: string;
@@ -36,10 +37,12 @@ export function ProductCardView({
   const [preview, setPreview] = useState<number | null>(null);
   const active = colours[preview ?? chosen] ?? colours[0];
   const image = active?.image ?? colours.find((c) => c.image)?.image ?? null;
+  // Open the product in the colour that is showing (hovered or chosen).
+  const link = active ? `${href}?colour=${colourSlug(active.name)}` : href;
 
   return (
     <div className="group">
-      <Link href={href} className="relative block aspect-[4/5] overflow-hidden bg-paper">
+      <Link href={link} className="relative block aspect-[4/5] overflow-hidden bg-paper">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -57,7 +60,7 @@ export function ProductCardView({
       </Link>
       <div className="mt-5 flex items-start justify-between gap-4">
         <div>
-          <Link href={href} className="block">
+          <Link href={link} className="block">
             <h3 className="text-xl font-medium tracking-tight">{name}</h3>
             <p className="mt-1 text-sm text-ink/60">{tagline}</p>
           </Link>
@@ -86,7 +89,7 @@ export function ProductCardView({
             ))}
           </div>
         </div>
-        <Link href={href} className="shrink-0">
+        <Link href={link} className="shrink-0">
           {price}
         </Link>
       </div>

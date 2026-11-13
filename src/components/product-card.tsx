@@ -1,5 +1,6 @@
 import { money, unitPrice } from '@/lib/pricing';
 import type { Product, SaleMode } from '@/lib/types';
+import { colourMatches } from '@/lib/colour';
 import { ProductCardView } from './product-card-view';
 
 export function priceRange(product: Product, mode: SaleMode) {
@@ -65,7 +66,7 @@ export function ProductCard({
     const image = own.find((i) => i.is_listing) ?? own[0] ?? fallback;
     return { id: v.id, name: v.color_name, hex: v.color_hex, image: image ? { url: image.url, alt: image.alt } : null };
   });
-  const wanted = colour ? colours.findIndex((c) => c.name.toLowerCase() === colour.toLowerCase()) : -1;
+  const wanted = colour ? colours.findIndex((c) => colourMatches(c.name, colour)) : -1;
 
   return (
     <ProductCardView
