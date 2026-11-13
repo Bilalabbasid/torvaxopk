@@ -26,6 +26,9 @@ const technology = [
   },
 ];
 
+// Rows of the size guide, matched by label against each case's specs (edited in Admin → Products).
+const sizeRows = ['Size', 'Dimensions', 'Volume', 'Weight', 'Best for'];
+
 const marquee = ['German quality', 'Built to EU standards', 'Elegance endures', 'TSA lock built in', 'Detachable spinners', '2-year warranty', 'Three sizes', 'Three colours', 'Delivered across Pakistan'];
 
 export default async function HomePage() {
@@ -295,6 +298,66 @@ export default async function HomePage() {
             image: set.product_images.find((img) => img.variant_id === v.id)?.url ?? '',
           }))}
         />
+      ) : null}
+
+      {/* 05 Size guide */}
+      {singles.length > 1 ? (
+        <section id="size-guide" className="container-x py-20 lg:py-28">
+          <p className="label text-steel-600">05 — Size guide</p>
+          <h2 className="display mt-4 text-5xl sm:text-6xl lg:text-7xl">Which one is yours?</h2>
+          <div className="-mx-4 mt-12 overflow-x-auto px-4 lg:mt-16">
+            <table className="w-full min-w-[640px] border-collapse text-left">
+              <thead>
+                <tr className="border-b border-ink">
+                  <th className="w-1/4 pb-5" />
+                  {singles.map((p) => (
+                    <th key={p.id} scope="col" className="pb-5 text-2xl font-medium tracking-tight sm:text-3xl">
+                      {p.size_label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sizeRows.map((label) => (
+                  <tr key={label} className="hairline border-b">
+                    <th scope="row" className="label py-5 pr-4 font-normal text-steel-600">
+                      {label}
+                    </th>
+                    {singles.map((p) => (
+                      <td key={p.id} className="py-5 pr-4">
+                        {p.specs.find((s) => s.label === label)?.value ?? '—'}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+                <tr className="hairline border-b">
+                  <th scope="row" className="label py-5 pr-4 font-normal text-steel-600">
+                    {preorder ? 'Preorder price' : 'Price'}
+                  </th>
+                  {singles.map((p) => {
+                    const { price, compareAt } = priceRange(p, mode);
+                    return (
+                      <td key={p.id} className="py-5 pr-4">
+                        <span className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                          <span className="font-mono tabular-nums">{money(price)}</span>
+                          <Link
+                            href={`/products/${p.slug}`}
+                            className="label border-b border-ink pb-0.5 text-[10px] transition-colors hover:border-ember hover:text-ember-600"
+                          >
+                            View
+                          </Link>
+                        </span>
+                        {preorder && compareAt ? (
+                          <span className="mt-1 block text-xs text-ink/60">{money(compareAt)} after launch</span>
+                        ) : null}
+                      </td>
+                    );
+                  })}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       ) : null}
 
       {/* Closing call to action */}
