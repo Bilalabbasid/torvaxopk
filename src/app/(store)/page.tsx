@@ -141,51 +141,73 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* Origin: a dark band of big figures, in the style of the product page's key figures. */}
-      <section className="bg-ink text-bone">
-        <div className="container-x pt-20 lg:pt-28">
-          <div className="grid items-end gap-8 lg:grid-cols-12">
-            <div className="lg:col-span-7">
-              <p className="reveal label text-ember">From Germany</p>
-              <h2 className="reveal display mt-4 text-5xl sm:text-6xl lg:text-7xl" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
-                German quality.
-                <br />
-                EU standards.
-              </h2>
+      {/* Origin: an editorial split, a product photo beside the German-quality story. */}
+      <section className="container-x py-20 lg:py-28">
+        <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="reveal relative lg:col-span-6">
+            <div className="aspect-[4/5] overflow-hidden bg-paper sm:aspect-[5/4] lg:aspect-[4/5]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/products/forward-large-glacier.jpg"
+                alt="Forward Large in Glacier Blue"
+                loading="lazy"
+                className="size-full object-contain"
+              />
             </div>
+            <p className="label absolute bottom-0 left-0 flex items-center gap-3 bg-ink px-4 py-3 text-[10px] text-bone">
+              <Chevrons count={2} className="h-2.5 w-auto text-ember" />
+              German brand · EU standards
+            </p>
+          </div>
+
+          <div className="lg:col-span-5 lg:col-start-8">
+            <p className="reveal label text-steel-600">From Germany</p>
+            <h2 className="reveal display mt-4 text-5xl sm:text-6xl" style={{ '--reveal-delay': '80ms' } as React.CSSProperties}>
+              German quality.
+              <br />
+              EU standards.
+            </h2>
             <p
-              className="reveal max-w-md text-lg leading-relaxed text-bone/65 lg:col-span-4 lg:col-start-9"
+              className="reveal mt-6 max-w-md text-lg leading-relaxed text-ink/70"
               style={{ '--reveal-delay': '140ms' } as React.CSSProperties}
             >
               Torvaxo is a German luggage brand. The Forward series is built to the quality standards of the European market,
               and that is the case we deliver in Pakistan.
             </p>
+
+            <ul className="mt-10 grid gap-px bg-ink/10 p-px sm:grid-cols-2">
+              {[
+                ['German brand', 'Made for the European market first'],
+                ['EU quality standards', 'The same case, delivered here'],
+                ['2-year warranty', 'On every Forward case'],
+                ['Replaceable wheels', 'A worn wheel is a quick swap'],
+              ].map(([title, text], i) => (
+                <li
+                  key={title}
+                  className="reveal flex gap-4 bg-bone p-5"
+                  style={{ '--reveal-delay': `${180 + i * 60}ms` } as React.CSSProperties}
+                >
+                  <span className="label mt-0.5 text-[10px] text-ember-600">0{i + 1}</span>
+                  <span>
+                    <span className="block font-medium tracking-tight">{title}</span>
+                    <span className="mt-1 block text-[13px] text-ink/60">{text}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              href="/warranty"
+              className="label mt-8 inline-block border-b border-ink pb-1 transition-colors hover:border-ember hover:text-ember-600"
+            >
+              About the warranty
+            </Link>
           </div>
-          <dl className="mt-14 grid grid-cols-2 border-t border-bone/10 lg:mt-20 lg:grid-cols-4">
-            {[
-              ['DE', 'Origin', 'A German brand'],
-              ['EU', 'Quality', 'Built to EU standards'],
-              ['2 yrs', 'Warranty', 'On every case'],
-              ['4', 'Wheels', 'Detach and replace'],
-            ].map(([figure, label, text], i) => (
-              <div
-                key={label}
-                className="reveal border-bone/10 py-10 pr-4 lg:border-l lg:py-14 lg:pl-8 lg:first:border-l-0 lg:first:pl-0 [&:nth-child(even)]:border-l [&:nth-child(even)]:pl-6 [&:nth-child(n+3)]:border-t lg:[&:nth-child(n+3)]:border-t-0"
-                style={{ '--reveal-delay': `${i * 70}ms` } as React.CSSProperties}
-              >
-                <dt className="label text-[10px] text-ember">{label}</dt>
-                <dd className="mt-4">
-                  <span className="display block text-5xl sm:text-6xl">{figure}</span>
-                  <span className="mt-3 block text-sm text-bone/55">{text}</span>
-                </dd>
-              </div>
-            ))}
-          </dl>
         </div>
       </section>
 
       {/* Offer: three steps in a row, joined by the forward chevrons, on their own paper band. */}
-      <section className="hairline border-b bg-paper">
+      <section className="hairline border-y bg-paper">
         <div className="container-x py-20 lg:py-28">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
