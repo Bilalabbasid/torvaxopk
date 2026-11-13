@@ -23,7 +23,23 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
   if (!product) notFound();
 
   const mode = settings.sale_mode;
-  const separatePrices = product.is_set ? singlePrices(await listActiveProducts(), mode) : undefined;
+  const catalogue = product.is_set ? await listActiveProducts() : [];
+  const separatePrices = product.is_set ? singlePrices(catalogue, mode) : undefined;
+  // Sets: every case and the colours it comes in, so each case can have its own colour.
+  const setColours = new Set(product.product_variants.map((v) => v.color_name));
+  const cases = product.is_set
+    ? catalogue
+        .filter((p) => !p.is_set)
+        .map((p) => ({
+          label: p.size_label,
+          colours: p.product_variants
+            .filter((v) => setColours.has(v.color_name))
+            .map((v) => {
+              const own = p.product_images.filter((img) => img.variant_id === v.id);
+              return { name: v.color_name, hex: v.color_hex, image: (own.find((img) => img.is_listing) ?? own[0])?.url ?? '' };
+            }),
+        }))
+    : undefined;
   const variants = product.product_variants.map((v) => {
     // Gallery: this colour's own photos first, then the shared detail shots. The Set of Three only has
     // its listing photo per colour, so fall back to that rather than showing no photo of the colour.
@@ -94,6 +110,7 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
         depositAmount={settings.deposit_amount}
         couponPercent={settings.launch_coupon_percent}
         separatePrices={separatePrices}
+        cases={cases}
       />
 
       <section className="container-x grid gap-12 border-t hairline py-16 lg:grid-cols-12">

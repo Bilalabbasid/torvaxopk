@@ -181,4 +181,6 @@ export interface Customer {
 export interface CartLine {
   variantId: string;
   quantity: number;
+  /** Sets only: a colour per case (Cabin, Medium, Large) when the customer mixes colours. */
+  mix?: string[];
 }

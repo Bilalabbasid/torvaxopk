@@ -67,7 +67,7 @@ export async function getVariantsWithProducts(ids: string[]) {
   return must(
     await db()
       .from('product_variants')
-      .select('*, products!inner(id, name, slug, status, product_images(url, variant_id, is_listing, sort_order))')
+      .select('*, products!inner(id, name, slug, status, is_set, product_images(url, variant_id, is_listing, sort_order))')
       .in('id', ids),
     'Load variants',
   ) as (Variant & {
@@ -76,6 +76,7 @@ export async function getVariantsWithProducts(ids: string[]) {
       name: string;
       slug: string;
       status: string;
+      is_set: boolean;
       product_images: { url: string; variant_id: string | null; is_listing: boolean; sort_order: number }[];
     };
   })[];

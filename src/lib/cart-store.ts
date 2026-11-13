@@ -3,15 +3,19 @@
 import { useSyncExternalStore } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { lineKey } from './mix';
 import type { CartLine } from './types';
 
 const MAX_QTY = 10;
 
+const keyOf = (l: CartLine) => lineKey(l.variantId, l.mix);
+
 interface CartState {
   lines: CartLine[];
-  add: (variantId: string, quantity?: number) => void;
-  setQuantity: (variantId: string, quantity: number) => void;
-  remove: (variantId: string) => void;
+  add: (variantId: string, quantity?: number, mix?: string[]) => void;
+  /** `key` is the line key from `lineKey` (also returned on every quote line). */
+  setQuantity: (key: string, quantity: number) => void;
+  remove: (key: string) => void;
   clear: () => void;
 }
 
@@ -19,26 +23,26 @@ export const useCart = create<CartState>()(
   persist(
     (set) => ({
       lines: [],
-      add: (variantId, quantity = 1) =>
+      add: (variantId, quantity = 1, mix) =>
         set((s) => {
-          const existing = s.lines.find((l) => l.variantId === variantId);
-          if (existing) {
+          const key = lineKey(variantId, mix);
+          if (s.lines.some((l) => keyOf(l) === key)) {
             return {
-              lines: s.lines.map((l) =>
-                l.variantId === variantId ? { ...l, quantity: Math.min(l.quantity + quantity, MAX_QTY) } : l,
-              ),
+              lines: s.lines.map((l) => (keyOf(l) === key ? { ...l, quantity: Math.min(l.quantity + quantity, MAX_QTY) } : l)),
             };
           }
-          return { lines: [...s.lines, { variantId, quantity: Math.min(quantity, MAX_QTY) }] };
+          const line: CartLine = { variantId, quantity: Math.min(quantity, MAX_QTY) };
+          if (mix?.length) line.mix = mix;
+          return { lines: [...s.lines, line] };
         }),
-      setQuantity: (variantId, quantity) =>
+      setQuantity: (key, quantity) =>
         set((s) => ({
           lines:
             quantity <= 0
-              ? s.lines.filter((l) => l.variantId !== variantId)
-              : s.lines.map((l) => (l.variantId === variantId ? { ...l, quantity: Math.min(quantity, MAX_QTY) } : l)),
+              ? s.lines.filter((l) => keyOf(l) !== key)
+              : s.lines.map((l) => (keyOf(l) === key ? { ...l, quantity: Math.min(quantity, MAX_QTY) } : l)),
         })),
-      remove: (variantId) => set((s) => ({ lines: s.lines.filter((l) => l.variantId !== variantId) })),
+      remove: (key) => set((s) => ({ lines: s.lines.filter((l) => keyOf(l) !== key) })),
       clear: () => set({ lines: [] }),
     }),
     { name: 'torvaxo-pk-cart', version: 1 },

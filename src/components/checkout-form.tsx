@@ -166,7 +166,7 @@ export function CheckoutForm({ testMode }: { testMode: boolean }) {
             <div className={loading ? 'opacity-60' : ''}>
               <ul className="mb-6 space-y-4">
                 {quote.lines.map((l) => (
-                  <li key={l.variantId} className="flex gap-4 text-sm">
+                  <li key={l.key} className="flex gap-4 text-sm">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={l.image} alt="" className="aspect-[4/5] w-14 bg-paper object-contain" />
                     <div className="flex-1">

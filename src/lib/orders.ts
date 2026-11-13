@@ -1,10 +1,11 @@
 import 'server-only';
 import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
-import { getSettings, getVariantsWithProducts, imageForVariant, invalidateCatalog } from './catalog';
+import { getSettings, getVariantsWithProducts, imageForVariant, invalidateCatalog, listActiveProducts } from './catalog';
 import { issueLaunchReward, validateCoupon } from './coupons';
 import { emailOrderConfirmed, emailReward } from './email';
 import { PROVINCES } from './constants';
+import { isMatched, lineKey, mixLabel, resolveMix, type MixCase } from './mix';
 import { calculateTotals, unitPrice, type Totals } from './pricing';
 import { karachiStamp, paymentReference, randomCode } from './payments/crypto';
 import { db, must } from './supabase/admin';
@@ -19,10 +20,14 @@ const MAX_OPEN_UNPAID = 3;
 // ---------------------------------------------------------------------------
 
 export interface QuoteLine {
+  /** Cart line identity (see `lineKey`): the variant, plus the colour choices for a mixed set. */
+  key: string;
   variantId: string;
   productName: string;
   productSlug: string;
   variantLabel: string;
+  /** Sets only: the colour chosen for each case when they are not all the same. */
+  mix: string[] | null;
   sku: string;
   image: string;
   quantity: number;
@@ -54,35 +59,53 @@ export async function quoteCart(
   email?: string | null,
 ): Promise<Quote & { couponRow: Coupon | null }> {
   const settings = await getSettings();
-  const merged = new Map<string, number>();
+  // Merge duplicate lines. A set with its own colour per case is a different line from the matched set.
+  const merged = new Map<string, { variantId: string; mix: string[] | null; quantity: number }>();
   for (const line of cart) {
     if (!line?.variantId || !Number.isFinite(line.quantity)) continue;
-    merged.set(line.variantId, Math.min((merged.get(line.variantId) ?? 0) + Math.floor(line.quantity), MAX_QTY));
+    const mix = Array.isArray(line.mix) && line.mix.length ? line.mix.slice(0, 6).map(String) : null;
+    const key = lineKey(line.variantId, mix);
+    const quantity = Math.min((merged.get(key)?.quantity ?? 0) + Math.floor(line.quantity), MAX_QTY);
+    merged.set(key, { variantId: line.variantId, mix, quantity });
   }
-  const variants = await getVariantsWithProducts([...merged.keys()]);
+  const entries = [...merged.entries()];
+  const variants = await getVariantsWithProducts([...new Set(entries.map(([, e]) => e.variantId))]);
+  // The cases a set is made of, and the colours each one comes in (only needed for mixed-colour sets).
+  const cases: MixCase[] = entries.some(([, e]) => e.mix)
+    ? (await listActiveProducts())
+        .filter((p) => !p.is_set)
+        .map((p) => ({ label: p.size_label, colours: p.product_variants.map((v) => v.color_name) }))
+    : [];
+  // Several lines can draw on the same variant's stock.
+  const wanted = new Map<string, number>();
+  for (const [, e] of entries) if (e.quantity >= 1) wanted.set(e.variantId, (wanted.get(e.variantId) ?? 0) + e.quantity);
+
   const problems: string[] = [];
   const lines: QuoteLine[] = [];
 
-  for (const [variantId, quantity] of merged) {
+  for (const [key, { variantId, mix: rawMix, quantity }] of entries) {
     const v = variants.find((x) => x.id === variantId);
-    if (!v || v.products.status !== 'active') {
+    const mix = rawMix && v?.products.is_set ? resolveMix(rawMix, cases) : null;
+    if (!v || v.products.status !== 'active' || (rawMix && !mix)) {
       problems.push('An item in your cart is no longer available and was removed.');
       continue;
     }
     if (quantity < 1) continue;
     const { price, compareAt } = unitPrice(v, settings.sale_mode);
-    if (v.stock < quantity) {
-      problems.push(
-        v.stock === 0
-          ? `${v.products.name} in ${v.color_name} is sold out.`
-          : `Only ${v.stock} × ${v.products.name} in ${v.color_name} left.`,
-      );
+    if (v.stock < (wanted.get(variantId) ?? quantity)) {
+      const problem =
+        v.stock === 0 ? `${v.products.name} in ${v.color_name} is sold out.` : `Only ${v.stock} × ${v.products.name} in ${v.color_name} left.`;
+      if (!problems.includes(problem)) problems.push(problem);
     }
+    // All three the same colour as the variant is just the matched set.
+    const mixed = mix && !(isMatched(mix) && mix[0] === v.color_name) ? mix : null;
     lines.push({
+      key,
       variantId,
       productName: v.products.name,
       productSlug: v.products.slug,
-      variantLabel: v.color_name,
+      variantLabel: mixed ? mixLabel(mixed, cases) : v.color_name,
+      mix: mixed,
       sku: v.sku,
       image: imageForVariant(v.products.product_images, v.id),
       quantity,
@@ -143,7 +166,13 @@ export const checkoutSchema = z.object({
   payment_method: z.enum(['safepay', 'jazzcash', 'easypaisa', 'cod']),
   coupon: z.string().trim().max(40).default(''),
   cart: z
-    .array(z.object({ variantId: z.string().uuid(), quantity: z.number().int().min(1).max(MAX_QTY) }))
+    .array(
+      z.object({
+        variantId: z.string().uuid(),
+        quantity: z.number().int().min(1).max(MAX_QTY),
+        mix: z.array(z.string().max(40)).max(6).optional(),
+      }),
+    )
     .min(1, 'Your cart is empty.')
     .max(20),
 });

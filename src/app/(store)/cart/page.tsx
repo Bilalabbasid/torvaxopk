@@ -35,7 +35,7 @@ export default function CartPage() {
               </li>
             ))}
             {quote.lines.map((line) => (
-              <li key={line.variantId} className="hairline flex gap-5 border-b py-6 first:border-t">
+              <li key={line.key} className="hairline flex gap-5 border-b py-6 first:border-t">
                 <Link href={`/products/${line.productSlug}`} className="w-28 shrink-0 bg-paper sm:w-36">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={line.image} alt="" className="aspect-[4/5] w-full object-contain" />
@@ -62,20 +62,20 @@ export default function CartPage() {
                   </p>
                   <div className="mt-auto flex items-center gap-4 pt-4">
                     <div className="flex h-9 items-center border border-ink/15">
-                      <button className="h-full w-9" onClick={() => setQuantity(line.variantId, line.quantity - 1)} aria-label="Fewer">
+                      <button className="h-full w-9" onClick={() => setQuantity(line.key, line.quantity - 1)} aria-label="Fewer">
                         −
                       </button>
                       <span className="w-7 text-center font-mono text-sm tabular-nums">{line.quantity}</span>
                       <button
                         className="h-full w-9 disabled:opacity-30"
-                        onClick={() => setQuantity(line.variantId, line.quantity + 1)}
+                        onClick={() => setQuantity(line.key, line.quantity + 1)}
                         disabled={line.quantity >= Math.min(line.stock, 10)}
                         aria-label="More"
                       >
                         +
                       </button>
                     </div>
-                    <button className="label text-steel-600 hover:text-bad" onClick={() => remove(line.variantId)}>
+                    <button className="label text-steel-600 hover:text-bad" onClick={() => remove(line.key)}>
                       Remove
                     </button>
                   </div>
