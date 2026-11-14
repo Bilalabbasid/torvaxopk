@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useCart } from '@/lib/cart-store';
 import { colourSlug } from '@/lib/colour';
+import { categoryLabel } from '@/lib/lines';
 import { money } from '@/lib/pricing';
 import type { SaleMode } from '@/lib/types';
 import { Chevrons } from './brand';
@@ -357,7 +358,7 @@ export function ProductBuyBox({
                 Shop
               </Link>
               <span aria-hidden="true">/</span>
-              <span>Forward series{preorder ? ' · Preorder' : ''}</span>
+              <span>{categoryLabel(product.category)}{preorder ? ' · Preorder' : ''}</span>
             </nav>
 
             <h1 className="display mt-4 text-5xl xl:text-6xl">{product.name}</h1>
@@ -417,7 +418,9 @@ export function ProductBuyBox({
               <div className="mt-8">
                 <p className="label text-[10px] text-steel-600">{product.optionLabel}</p>
                 <div
-                  className={`mt-3 grid grid-cols-2 gap-px bg-ink/15 p-px ${siblings.length > 2 ? 'sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4' : ''}`}
+                  className={`mt-3 grid gap-px bg-ink/15 p-px ${
+                    siblings.length === 3 ? 'grid-cols-3' : siblings.length > 3 ? 'grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4' : 'grid-cols-2'
+                  }`}
                 >
                   {siblings.map((s) => {
                     const current = s.slug === product.slug;
