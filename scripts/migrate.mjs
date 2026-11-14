@@ -31,11 +31,11 @@ async function run() {
   await client.connect();
   console.log('Connected successfully to Supabase Postgres!');
 
-  const files = [
-    'supabase/migrations/0001_init.sql',
-    'supabase/migrations/0002_hardening.sql',
-    'supabase/seed.sql',
-  ];
+  // With file arguments, run only those (e.g. a new migration on an existing database):
+  //   node --env-file=.env.local scripts/migrate.mjs supabase/migrations/0003_catalogue_lines.sql
+  const files = process.argv.slice(2).length
+    ? process.argv.slice(2)
+    : ['supabase/migrations/0001_init.sql', 'supabase/migrations/0002_hardening.sql', 'supabase/migrations/0003_catalogue_lines.sql', 'supabase/seed.sql'];
 
   for (const file of files) {
     console.log(`\nExecuting ${file}...`);

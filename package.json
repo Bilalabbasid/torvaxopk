@@ -10,6 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
+    "db:catalogue": "node --env-file=.env.local scripts/catalogue.mjs",
     "admin:create": "node --env-file=.env.local scripts/create-admin.mjs",
     "backup": "node --env-file=.env.local scripts/export-data.mjs"
   },

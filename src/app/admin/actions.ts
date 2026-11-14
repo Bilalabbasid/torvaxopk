@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { CATEGORIES } from '@/lib/lines';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin-auth';
 import { getSettings, invalidateCatalog } from '@/lib/catalog';
@@ -285,6 +286,9 @@ export async function saveProduct(form: FormData) {
     features: str(form, 'features').split('\n').map((s) => s.trim()).filter(Boolean),
     status: ['active', 'draft', 'archived'].includes(str(form, 'status')) ? str(form, 'status') : 'draft',
     is_set: form.get('is_set') === 'on',
+    series: str(form, 'series') || name,
+    category: str(form, 'category') in CATEGORIES ? str(form, 'category') : 'luggage',
+    edition: str(form, 'edition') === 'signature' ? 'signature' : 'standard',
     sort_order: int(form, 'sort_order', 0),
     updated_at: new Date().toISOString(),
   };

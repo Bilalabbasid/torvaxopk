@@ -1,6 +1,7 @@
 import { money, unitPrice } from '@/lib/pricing';
 import type { Product, SaleMode } from '@/lib/types';
 import { colourMatches } from '@/lib/colour';
+import { forwardCases } from '@/lib/lines';
 import { ProductCardView } from './product-card-view';
 
 export function priceRange(product: Product, mode: SaleMode) {
@@ -11,7 +12,7 @@ export function priceRange(product: Product, mode: SaleMode) {
 
 /** Current price of each single case, for comparing the set against buying one by one. */
 export function singlePrices(products: Product[], mode: SaleMode) {
-  return products.filter((p) => !p.is_set).map((p) => priceRange(p, mode).price);
+  return forwardCases(products).map((p) => priceRange(p, mode).price);
 }
 
 export function PriceTag({

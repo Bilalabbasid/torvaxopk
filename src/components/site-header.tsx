@@ -8,8 +8,9 @@ import { Logo } from './brand';
 
 const links = [
   { label: 'Shop', href: '/shop' },
-  { label: 'Technology', href: '/#technology' },
-  { label: 'Colours', href: '/#colours' },
+  { label: 'Luggage', href: '/shop?category=luggage' },
+  { label: 'Bags', href: '/shop?category=bags' },
+  { label: 'Signature', href: '/shop?edition=signature' },
   { label: 'Preorder & launch', href: '/launch' },
 ];
 

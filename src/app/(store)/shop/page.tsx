@@ -2,53 +2,104 @@ import Link from 'next/link';
 import { ProductCard } from '@/components/product-card';
 import { getSettings, listActiveProducts } from '@/lib/catalog';
 import { colourMatches, colourSlug } from '@/lib/colour';
+import { CATEGORIES, EDITIONS, type Category } from '@/lib/lines';
 
 export const metadata = {
-  title: 'Shop hardshell luggage',
-  description: 'The Torvaxo Forward series: cabin, medium and large hardshell suitcases and the matched Set of Three. Delivered across Pakistan.',
+  title: 'Shop luggage and bags',
+  description:
+    'The Torvaxo Forward series and bags: hardshell cases, the Set of Three, backpacks, slings, duffels, the Signature edition and spare wheels. Delivered across Pakistan.',
   alternates: { canonical: '/shop' },
 };
 
+// "bags" groups every bag category for the menu link.
+const BAG_CATEGORIES: Category[] = ['backpacks', 'work', 'slings', 'duffels'];
+
+type Query = { category?: string; edition?: string; colour?: string };
+
+function href(query: Query) {
+  const params = new URLSearchParams(Object.entries(query).filter(([, v]) => v) as [string, string][]);
+  const qs = params.toString();
+  return qs ? `/shop?${qs}` : '/shop';
+}
+
+function Filter({ to, on, children }: { to: string; on: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      href={to}
+      aria-pressed={on}
+      className={`label flex h-10 shrink-0 items-center gap-2.5 border px-4 text-[10px] transition-colors ${on ? 'border-ink bg-ink text-bone' : 'border-ink/15 hover:border-ink'}`}
+    >
+      {children}
+    </Link>
+  );
+}
+
 export default async function ShopPage(props: PageProps<'/shop'>) {
-  const { colour } = await props.searchParams;
-  const selected = typeof colour === 'string' ? colour : null;
+  const raw = await props.searchParams;
+  const pick = (key: string) => (typeof raw[key] === 'string' ? (raw[key] as string) : undefined);
+  const query: Query = { category: pick('category'), edition: pick('edition'), colour: pick('colour') };
   const [settings, products] = await Promise.all([getSettings(), listActiveProducts()]);
+
+  const categories = (Object.keys(CATEGORIES) as Category[]).filter((c) => products.some((p) => p.category === c));
+  const inCategory = (p: (typeof products)[number]) =>
+    !query.category || (query.category === 'bags' ? BAG_CATEGORIES.includes(p.category as Category) : p.category === query.category);
+  const inEdition = (p: (typeof products)[number]) => !query.edition || p.edition === query.edition;
+
+  // Colours offered are the ones in the current category and edition.
+  const scoped = products.filter((p) => inCategory(p) && inEdition(p));
   const colours = [
-    ...new Map(products.flatMap((p) => p.product_variants.map((v) => [v.color_name, { name: v.color_name, hex: v.color_hex }]))).values(),
+    ...new Map(scoped.flatMap((p) => p.product_variants.map((v) => [v.color_name, { name: v.color_name, hex: v.color_hex }]))).values(),
   ];
-  const active = colours.find((c) => colourMatches(c.name, selected)) ?? null;
-  const shown = active ? products.filter((p) => p.product_variants.some((v) => v.color_name === active.name)) : products;
+  const colour = colours.find((c) => colourMatches(c.name, query.colour)) ?? null;
+  const shown = colour ? scoped.filter((p) => p.product_variants.some((v) => v.color_name === colour.name)) : scoped;
+
+  const title =
+    query.edition === 'signature'
+      ? 'Signature'
+      : query.category === 'bags'
+        ? 'Bags'
+        : query.category && query.category in CATEGORIES
+          ? CATEGORIES[query.category as Category].label
+          : 'Shop';
 
   return (
     <section className="container-x py-14 lg:py-20">
-      <header className="flex flex-wrap items-end justify-between gap-8 border-b border-ink pb-8">
-        <div>
-          <p className="label text-steel-600">{settings.sale_mode === 'preorder' ? 'The Forward series · Preorder' : 'The Forward series'}</p>
-          <h1 className="display mt-4 text-6xl sm:text-7xl lg:text-8xl">Shop</h1>
-        </div>
+      <header className="border-b border-ink pb-8">
+        <p className="label text-steel-600">{settings.sale_mode === 'preorder' ? 'Torvaxo · Preorder' : 'Torvaxo'}</p>
+        <h1 className="display mt-4 text-6xl sm:text-7xl lg:text-8xl">{title}</h1>
 
-        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filter by colour">
-          <Link
-            href="/shop"
-            aria-pressed={!active}
-            className={`label flex h-10 items-center border px-4 transition-colors ${!active ? 'border-ink bg-ink text-bone' : 'border-ink/15 hover:border-ink'}`}
-          >
-            All
-          </Link>
-          {colours.map((c) => {
-            const on = active?.name === c.name;
-            return (
-              <Link
-                key={c.name}
-                href={`/shop?colour=${colourSlug(c.name)}`}
-                aria-pressed={on}
-                className={`label flex h-10 items-center gap-2.5 border px-4 transition-colors ${on ? 'border-ink bg-ink text-bone' : 'border-ink/15 hover:border-ink'}`}
-              >
-                <span className="size-3 rounded-full ring-1 ring-ink/15" style={{ backgroundColor: c.hex }} />
-                {c.name}
-              </Link>
-            );
-          })}
+        <div className="mt-8 space-y-3">
+          <div className="-mx-5 flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label="Filter by category">
+            <Filter to={href({ ...query, category: undefined, colour: undefined })} on={!query.category}>
+              All
+            </Filter>
+            {categories.map((c) => (
+              <Filter key={c} to={href({ ...query, category: c, colour: undefined })} on={query.category === c}>
+                {CATEGORIES[c].label}
+              </Filter>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex gap-2" role="group" aria-label="Filter by edition">
+              {(Object.keys(EDITIONS) as (keyof typeof EDITIONS)[]).map((e) => (
+                <Filter key={e} to={href({ ...query, edition: query.edition === e ? undefined : e, colour: undefined })} on={query.edition === e}>
+                  {EDITIONS[e]}
+                </Filter>
+              ))}
+            </div>
+            <span className="mx-1 hidden h-6 w-px bg-ink/15 sm:block" aria-hidden="true" />
+            <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by colour">
+              {colours.map((c) => {
+                const on = colour?.name === c.name;
+                return (
+                  <Filter key={c.name} to={href({ ...query, colour: on ? undefined : colourSlug(c.name) })} on={on}>
+                    <span className="size-3 rounded-full ring-1 ring-ink/15" style={{ backgroundColor: c.hex }} />
+                    {c.name}
+                  </Filter>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </header>
 
@@ -58,10 +109,17 @@ export default async function ShopPage(props: PageProps<'/shop'>) {
       <div className="mt-8 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
         {shown.map((product, i) => (
           // Keyed by colour too, so cards re-seed their selected swatch when the filter changes.
-          <ProductCard key={`${product.id}-${active?.name ?? ''}`} product={product} mode={settings.sale_mode} index={i} colour={active?.name} />
+          <ProductCard key={`${product.id}-${colour?.name ?? ''}`} product={product} mode={settings.sale_mode} index={i} colour={colour?.name} />
         ))}
       </div>
-      {!shown.length ? <p className="mt-12 text-steel-600">Nothing here yet.</p> : null}
+      {!shown.length ? (
+        <p className="mt-12 text-steel-600">
+          Nothing here yet.{' '}
+          <Link href="/shop" className="underline underline-offset-4 hover:text-ink">
+            See everything
+          </Link>
+        </p>
+      ) : null}
     </section>
   );
 }

@@ -4,11 +4,11 @@ import type { Settings } from '@/lib/types';
 import { Logo } from './brand';
 
 const shop = [
-  { label: 'All luggage', href: '/shop' },
-  { label: 'Forward Cabin', href: '/products/forward-cabin' },
-  { label: 'Forward Medium', href: '/products/forward-medium' },
-  { label: 'Forward Large', href: '/products/forward-large' },
-  { label: 'Set of Three', href: '/products/forward-set-of-three' },
+  { label: 'All products', href: '/shop' },
+  { label: 'Luggage', href: '/shop?category=luggage' },
+  { label: 'Backpacks and bags', href: '/shop?category=bags' },
+  { label: 'Signature edition', href: '/shop?edition=signature' },
+  { label: 'Wheels and parts', href: '/shop?category=parts' },
 ];
 
 const service = [

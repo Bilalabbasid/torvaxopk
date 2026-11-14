@@ -1,5 +1,6 @@
 import type { Product } from '@/lib/types';
 import { saveProduct } from '@/app/admin/actions';
+import { CATEGORIES, EDITIONS } from '@/lib/lines';
 
 export function ProductForm({ product }: { product?: Product }) {
   return (
@@ -22,6 +23,32 @@ export function ProductForm({ product }: { product?: Product }) {
           <span className="field-label">Tagline</span>
           <input name="tagline" defaultValue={product?.tagline} className="input h-10 text-sm" />
         </label>
+        <label className="block">
+          <span className="field-label">Line (products in one line are offered as options of each other)</span>
+          <input name="series" defaultValue={product?.series ?? 'Forward'} placeholder="Forward, Pivot Duo…" className="input h-10 text-sm" />
+        </label>
+        <div className="grid grid-cols-2 gap-4">
+          <label className="block">
+            <span className="field-label">Category</span>
+            <select name="category" defaultValue={product?.category ?? 'luggage'} className="input h-10 text-sm">
+              {Object.entries(CATEGORIES).map(([key, c]) => (
+                <option key={key} value={key}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="field-label">Edition</span>
+            <select name="edition" defaultValue={product?.edition ?? 'standard'} className="input h-10 text-sm">
+              {Object.entries(EDITIONS).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
       <label className="block">
         <span className="field-label">Description</span>

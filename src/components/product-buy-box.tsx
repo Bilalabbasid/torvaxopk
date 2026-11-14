@@ -94,6 +94,7 @@ export function ProductBuyBox({
   separatePrices,
   cases,
   siblings,
+  editions,
   keyFigures,
   bundle,
   initialColour,
@@ -106,6 +107,10 @@ export function ProductBuyBox({
     tagline: string;
     description: string;
     isSet: boolean;
+    category: string;
+    /** What the siblings are called: Size, Edition or Pack. */
+    optionLabel: string;
+    hasWheels: boolean;
     specs: { label: string; value: string }[];
     features: string[];
   };
@@ -119,6 +124,8 @@ export function ProductBuyBox({
   /** Sets only: lets the customer pick a different colour for each case. */
   cases?: SetCase[];
   siblings: Sibling[];
+  /** Cases only: Standard and Signature edition of the same size. */
+  editions?: Sibling[];
   keyFigures: { label: string; value: string }[];
   bundle: BundleOffer | null;
   /** ?colour= from the address, as a slug. */
@@ -408,9 +415,33 @@ export function ProductBuyBox({
             {/* Size: each size is its own product, so this switches page and keeps the colour. */}
             {siblings.length > 1 ? (
               <div className="mt-8">
-                <p className="label text-[10px] text-steel-600">Size</p>
-                <div className="mt-3 grid grid-cols-2 gap-px bg-ink/15 p-px sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+                <p className="label text-[10px] text-steel-600">{product.optionLabel}</p>
+                <div
+                  className={`mt-3 grid grid-cols-2 gap-px bg-ink/15 p-px ${siblings.length > 2 ? 'sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4' : ''}`}
+                >
                   {siblings.map((s) => {
+                    const current = s.slug === product.slug;
+                    return (
+                      <Link
+                        key={s.slug}
+                        href={`/products/${s.slug}?colour=${colour}`}
+                        aria-current={current ? 'page' : undefined}
+                        className={`flex flex-col gap-1 px-3 py-3 transition-colors ${current ? 'bg-ink text-bone' : 'bg-bone hover:bg-white'}`}
+                      >
+                        <span className="text-sm font-medium">{s.label}</span>
+                        <span className="font-mono text-[12px] tabular-nums opacity-65">{money(s.price)}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {editions && editions.length > 1 ? (
+              <div className="mt-6">
+                <p className="label text-[10px] text-steel-600">Edition</p>
+                <div className="mt-3 grid grid-cols-2 gap-px bg-ink/15 p-px">
+                  {editions.map((s) => {
                     const current = s.slug === product.slug;
                     return (
                       <Link
@@ -543,7 +574,9 @@ export function ProductBuyBox({
               {[
                 { title: 'Delivery', text: shippingNote, href: '/shipping' },
                 { title: 'Returns', text: '7 days to return', href: '/returns' },
-                { title: 'Warranty', text: '2 years, replaceable wheels', href: '/warranty' },
+                product.hasWheels
+                  ? { title: 'Warranty', text: '2 years, replaceable wheels', href: '/warranty' }
+                  : { title: 'Warranty', text: '2-year warranty', href: '/warranty' },
               ].map((perk) => (
                 <li key={perk.href}>
                   <Link href={perk.href} className="group block h-full px-2 py-4 transition-colors hover:bg-white">
@@ -596,7 +629,10 @@ export function ProductBuyBox({
               ) : null}
               <Fold title="Warranty and service">
                 <p className="pb-6 text-sm leading-relaxed text-ink/75">
-                  Every Forward case has a 2-year warranty. A worn wheel is a quick swap, as the wheels detach. See{' '}
+                  {product.hasWheels
+                    ? 'Every Forward case has a 2-year warranty. A worn wheel is a quick swap, as the wheels detach.'
+                    : 'Covered by a 2-year warranty.'}{' '}
+                  See{' '}
                   <Link href="/warranty" className="underline underline-offset-4 hover:text-ember-600">
                     Warranty
                   </Link>{' '}
@@ -680,10 +716,18 @@ export function ProductBuyBox({
           <div className="lg:col-span-4">
             <p className="reveal label text-steel-600">{product.isSet ? 'Just need one?' : 'Goes with it'}</p>
             <h2 className="reveal display mt-3 text-4xl sm:text-5xl" style={delay(60)}>
-              {product.isSet ? 'The single sizes.' : 'The same case, another size.'}
+              {product.isSet
+                ? 'The single sizes.'
+                : product.optionLabel === 'Size'
+                  ? 'The same case, another size.'
+                  : product.optionLabel === 'Edition'
+                    ? 'The other edition.'
+                    : 'More for your case.'}
             </h2>
             <p className="reveal mt-4 max-w-xs text-ink/65" style={delay(100)}>
-              Shown in {variant.colorName}, true to scale, so you can see the difference.
+              {product.optionLabel === 'Size'
+                ? `Shown in ${variant.colorName}, true to scale, so you can see the difference.`
+                : `Shown in ${variant.colorName} where available.`}
             </p>
             <Link
               href="/shop"

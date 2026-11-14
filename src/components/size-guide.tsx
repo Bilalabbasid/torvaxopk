@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import { colourSlug } from '@/lib/colour';
 import { money } from '@/lib/pricing';
 import type { Product, SaleMode } from '@/lib/types';
+import { forwardCases } from '@/lib/lines';
 import { priceRange } from './product-card';
 
 // Rows, matched by label against each case's specs (edited in Admin → Products).
@@ -17,16 +18,17 @@ export function SizeGuide({
 }: {
   products: Product[];
   mode: SaleMode;
-  /** Slug of the product being viewed, if any. */
+  /** Size label of the case being viewed (Cabin, Medium, Large), if any. */
   current?: string;
   /** Colour name to carry into the View links. */
   colour?: string;
 }) {
-  const singles = products.filter((p) => !p.is_set);
+  const singles = forwardCases(products);
   if (singles.length < 2) return null;
   const preorder = mode === 'preorder';
   const query = colour ? `?colour=${colourSlug(colour)}` : '';
-  const cell = (p: Product) => (p.slug === current ? 'bg-ink/[0.035]' : '');
+  const isCurrent = (p: Product) => p.size_label === current;
+  const cell = (p: Product) => (isCurrent(p) ? 'bg-ink/[0.035]' : '');
 
   return (
     <section id="size-guide" className="container-x py-16 lg:py-24">
@@ -41,7 +43,7 @@ export function SizeGuide({
               <th className="w-1/4 pb-5" />
               {singles.map((p) => (
                 <th key={p.id} scope="col" className={`px-4 pb-5 align-bottom ${cell(p)}`}>
-                  {p.slug === current ? <span className="label mb-2 block text-[10px] text-ember-600">You are viewing</span> : null}
+                  {isCurrent(p) ? <span className="label mb-2 block text-[10px] text-ember-600">You are viewing</span> : null}
                   <span className="text-2xl font-medium tracking-tight sm:text-3xl">{p.size_label}</span>
                 </th>
               ))}
@@ -70,7 +72,7 @@ export function SizeGuide({
                   <td key={p.id} className={`px-4 py-5 ${cell(p)}`}>
                     <span className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                       <span className="font-mono tabular-nums">{money(price)}</span>
-                      {p.slug === current ? null : (
+                      {isCurrent(p) ? null : (
                         <Link
                           href={`/products/${p.slug}${query}`}
                           className="label border-b border-ink pb-0.5 text-[10px] transition-colors hover:border-ember hover:text-ember-600"

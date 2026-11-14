@@ -66,6 +66,10 @@ export interface Product {
   features: string[];
   status: 'active' | 'draft' | 'archived';
   is_set: boolean;
+  /** Products that are options of one another (sizes of a case, editions of a bag). */
+  series: string;
+  category: string;
+  edition: 'standard' | 'signature';
   sort_order: number;
   created_at: string;
   updated_at: string;

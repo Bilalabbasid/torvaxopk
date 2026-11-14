@@ -5,6 +5,7 @@ import { getSettings, getVariantsWithProducts, imageForVariant, invalidateCatalo
 import { issueLaunchReward, validateCoupon } from './coupons';
 import { emailOrderConfirmed, emailReward } from './email';
 import { PROVINCES } from './constants';
+import { forwardCases } from './lines';
 import { isMatched, lineKey, mixLabel, resolveMix, type MixCase } from './mix';
 import { calculateTotals, unitPrice, type Totals } from './pricing';
 import { karachiStamp, paymentReference, randomCode } from './payments/crypto';
@@ -85,8 +86,7 @@ export async function quoteCart(
   const variants = await getVariantsWithProducts([...new Set(entries.map(([, e]) => e.variantId))]);
   // The cases a set is made of, and the colours each one comes in (only needed for mixed-colour sets).
   const cases: MixCase[] = entries.some(([, e]) => e.mix)
-    ? (await listActiveProducts())
-        .filter((p) => !p.is_set)
+    ? forwardCases(await listActiveProducts())
         .map((p) => ({ label: p.size_label, colours: p.product_variants.map((v) => v.color_name) }))
     : [];
   // Several lines can draw on the same variant's stock.
@@ -158,18 +158,21 @@ export async function quoteCart(
   };
 }
 
-/** The next single case not in the cart, in the colour of the last line. None once the set is in the cart. */
+/** The next Forward case not in the cart, in the colour of the last case. None once the set is in the cart. */
 async function suggestFor(
   lines: QuoteLine[],
   variants: Awaited<ReturnType<typeof getVariantsWithProducts>>,
   mode: Settings['sale_mode'],
 ): Promise<CartSuggestion | null> {
   if (variants.some((v) => v.products.is_set)) return null;
-  const catalogue = await listActiveProducts();
+  const cases = forwardCases(await listActiveProducts());
+  const caseSlugs = new Set(cases.map((p) => p.slug));
   const inCart = new Set(lines.map((l) => l.productSlug));
-  const colour = variants.find((v) => v.id === lines[lines.length - 1].variantId)?.color_name;
-  for (const product of catalogue) {
-    if (product.is_set || inCart.has(product.slug)) continue;
+  const last = [...lines].reverse().find((l) => caseSlugs.has(l.productSlug));
+  if (!last) return null;
+  const colour = variants.find((v) => v.id === last.variantId)?.color_name;
+  for (const product of cases) {
+    if (inCart.has(product.slug)) continue;
     const variant = product.product_variants.find((v) => v.color_name === colour && v.stock > 0);
     if (!variant) continue;
     return {

@@ -4,6 +4,7 @@ import { ProductCard, priceRange, singlePrices } from '@/components/product-card
 import { SizeGuide } from '@/components/size-guide';
 import { getProductBySlug, getSettings, listActiveProducts } from '@/lib/catalog';
 import { colourSlug } from '@/lib/colour';
+import { EDITIONS, FORWARD, forwardCases, forwardSet, hasWheels, optionLabel } from '@/lib/lines';
 import { unitPrice } from '@/lib/pricing';
 
 export async function generateMetadata(props: PageProps<'/products/[slug]'>) {
@@ -24,14 +25,15 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
   if (!product) notFound();
 
   const mode = settings.sale_mode;
-  const singles = catalogue.filter((p) => !p.is_set);
-  const set = catalogue.find((p) => p.is_set);
-  const separatePrices = product.is_set ? singlePrices(catalogue, mode) : undefined;
+  const cases = forwardCases(catalogue);
+  const set = forwardSet(catalogue);
+  const isForwardSet = product.series === FORWARD && product.is_set;
+  const separatePrices = isForwardSet ? singlePrices(catalogue, mode) : undefined;
 
-  // Sets: every case and the colours it comes in, so each case can have its own colour.
+  // The Forward set: every case and the colours it comes in, so each case can have its own colour.
   const setColours = new Set(product.product_variants.map((v) => v.color_name));
-  const cases = product.is_set
-    ? singles.map((p) => ({
+  const setCases = isForwardSet
+    ? cases.map((p) => ({
         label: p.size_label,
         colours: p.product_variants
           .filter((v) => setColours.has(v.color_name))
@@ -44,7 +46,7 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
 
   const variants = product.product_variants.map((v) => {
     // Gallery: this colour's photos first, then the shared detail shots. Card (listing) photos are for
-    // listings, except on the Set of Three, whose only photo per colour is its listing shot.
+    // listings, unless a colour has no other photo (the set, the bags).
     const own = product.product_images.filter((img) => img.variant_id === v.id);
     const gallery = own.filter((img) => !img.is_listing);
     return {
@@ -59,12 +61,30 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
     };
   });
 
-  // Size tiles: the three cases, then the set.
-  const siblings: Sibling[] = [...singles, ...(set ? [set] : [])].map((p) => ({
+  // Options: the other products of the same series (sizes of a case, editions of a bag, packs of a part).
+  const series = catalogue.filter((p) => p.series === product.series);
+  const siblings: Sibling[] = series.map((p) => ({
     slug: p.slug,
     label: p.is_set ? 'Set of 3' : p.size_label,
     price: priceRange(p, mode).price,
   }));
+  // Forward and Forward Signature are two editions of the same cases: offer the other one by size.
+  const otherEdition =
+    product.category === 'luggage' && !product.is_set
+      ? catalogue.find(
+          (p) =>
+            p.category === 'luggage' &&
+            !p.is_set &&
+            p.edition !== product.edition &&
+            p.size_label === product.size_label &&
+            (p.series === FORWARD || p.series === `${FORWARD} Signature`),
+        )
+      : undefined;
+  const editions: Sibling[] = otherEdition
+    ? [product, otherEdition]
+        .sort((a, b) => (a.edition === 'standard' ? -1 : 1) - (b.edition === 'standard' ? -1 : 1))
+        .map((p) => ({ slug: p.slug, label: EDITIONS[p.edition], price: priceRange(p, mode).price }))
+    : [];
 
   const spec = (label: string) => product.specs.find((s) => s.label === label)?.value;
   const keyFigures = ['Size', 'Volume', 'Weight', 'Dimensions', 'Total volume', 'Includes']
@@ -72,8 +92,9 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
     .filter((f) => f.value && f.value.length <= 18)
     .slice(0, 4);
 
+  // The set offer, on the standard Forward cases.
   const bundle: BundleOffer | null =
-    !product.is_set && set
+    product.series === FORWARD && !product.is_set && set
       ? {
           slug: set.slug,
           name: set.name,
@@ -85,8 +106,14 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
         }
       : null;
 
-  // Cross-selling: the other cases (or, on the set, the single sizes), pre-set to the colour being viewed.
-  const others = product.is_set ? singles : singles.filter((p) => p.id !== product.id);
+  // Cross-selling, pre-set to the colour being viewed: on a case the other sizes, on the set the single
+  // sizes, on anything else the rest of its line, or failing that more of the same category.
+  const sameSeries = series.filter((p) => p.id !== product.id && !(product.series === FORWARD && p.is_set));
+  const others = isForwardSet
+    ? cases
+    : sameSeries.length
+      ? sameSeries
+      : catalogue.filter((p) => p.category === product.category && p.edition === product.edition && p.id !== product.id).slice(0, 3);
   const suggestions = Object.fromEntries(
     product.product_variants.map((v) => [
       v.color_name,
@@ -94,12 +121,16 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
     ]),
   );
 
-  const sizeGuide = Object.fromEntries(
-    product.product_variants.map((v) => [
-      v.color_name,
-      <SizeGuide key={v.color_name} products={catalogue} mode={mode} current={product.slug} colour={v.color_name} />,
-    ]),
-  );
+  // The size guide belongs to the cases.
+  const sizeGuide =
+    product.category === 'luggage'
+      ? Object.fromEntries(
+          product.product_variants.map((v) => [
+            v.color_name,
+            <SizeGuide key={v.color_name} products={catalogue} mode={mode} current={product.is_set ? undefined : product.size_label} colour={v.color_name} />,
+          ]),
+        )
+      : undefined;
 
   const wantedColour = typeof query.colour === 'string' ? colourSlug(query.colour) : null;
 
@@ -151,6 +182,9 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
           tagline: product.tagline,
           description: product.description,
           isSet: product.is_set,
+          category: product.category,
+          optionLabel: optionLabel(product.category),
+          hasWheels: hasWheels(product.category),
           specs: product.specs,
           features: product.features,
         }}
@@ -160,8 +194,9 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
         couponPercent={settings.launch_coupon_percent}
         shipping={{ flat: settings.shipping_flat, freeFrom: settings.shipping_free_from }}
         separatePrices={separatePrices}
-        cases={cases}
+        cases={setCases}
         siblings={siblings}
+        editions={editions}
         keyFigures={keyFigures}
         bundle={bundle}
         initialColour={wantedColour}

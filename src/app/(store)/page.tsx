@@ -5,6 +5,7 @@ import { ColourStory } from '@/components/colour-story';
 import { PriceTag, ProductCard, priceRange, singlePrices } from '@/components/product-card';
 import { TripPicker, type TripOption } from '@/components/trip-picker';
 import { getSettings, listActiveProducts } from '@/lib/catalog';
+import { forwardCases, forwardSet } from '@/lib/lines';
 import { money, unitPrice } from '@/lib/pricing';
 
 const technology = [
@@ -33,10 +34,11 @@ const marquee = ['German quality', 'Built to EU standards', 'Elegance endures', 
 export default async function HomePage() {
   const [settings, products] = await Promise.all([getSettings(), listActiveProducts()]);
   const mode = settings.sale_mode;
-  const singles = products.filter((p) => !p.is_set);
-  const set = products.find((p) => p.is_set);
+  // The home page tells the story of the Forward cases; other lines live on the shop and product pages.
+  const singles = forwardCases(products);
+  const set = forwardSet(products);
   const setPrice = set ? priceRange(set, mode) : null;
-  const fromPrice = products.length ? Math.min(...products.map((p) => priceRange(p, mode).price)) : null;
+  const fromPrice = singles.length ? Math.min(...singles.map((p) => priceRange(p, mode).price)) : null;
   const preorder = mode === 'preorder';
   const separate = singlePrices(products, mode);
   const separateTotal = separate.reduce((sum, p) => sum + p, 0);
