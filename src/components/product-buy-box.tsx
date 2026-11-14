@@ -42,17 +42,18 @@ const LOW_STOCK = 5;
 
 function Chevron({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 44.88 100" className={className} fill="currentColor" aria-hidden="true">
-      <polygon points="0,0 14,0 44.88,50 14,100 0,100 30.88,50" />
+    <svg viewBox="0 0 54.56 100" className={className} fill="currentColor" aria-hidden="true">
+      <polygon points="0,0 20.56,0 54.56,50 20.56,100 0,100 34,50" />
     </svg>
   );
 }
 
 /** Product photo that zooms under a mouse pointer. */
-function ZoomFigure({ children, className = '' }: { children: ReactNode; className?: string }) {
+function ZoomFigure({ children, className = '', hidden }: { children: ReactNode; className?: string; hidden?: boolean }) {
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
   return (
     <figure
+      aria-hidden={hidden || undefined}
       className={`overflow-hidden bg-paper ${className} ${zoom ? 'cursor-zoom-out' : 'lg:cursor-zoom-in'}`}
       onPointerMove={(e) => {
         if (e.pointerType !== 'mouse') return;
@@ -175,8 +176,17 @@ export function ProductBuyBox({
   const chosen = mixable ? (picks ?? mixable.map(() => variant.colorName)) : [];
   const mixed = picks != null;
   const mixedImages = mixed && mixable ? mixable.map((c, i) => c.colours.find((x) => x.name === chosen[i])) : null;
-  const gallery = variant.images;
-  const slides = gallery.length + (mixedImages ? 1 : 0);
+  const photos: { key: string; url: string; alt: string; composite?: typeof mixedImages }[] = [
+    ...(mixedImages ? [{ key: `mix-${chosen.join('-')}`, url: '', alt: 'Your mix of colours', composite: mixedImages }] : []),
+    ...variant.images.map((img) => ({ key: img.url, url: img.url, alt: img.alt })),
+  ];
+
+  function goTo(index: number) {
+    const el = carousel.current;
+    if (!el) return;
+    const target = Math.max(0, Math.min(photos.length - 1, index));
+    el.scrollTo({ left: target * el.clientWidth, behavior: 'smooth' });
+  }
   const total = variant.price * qty;
   const shippingNote =
     shipping.freeFrom > 0 && total >= shipping.freeFrom
@@ -222,54 +232,118 @@ export function ProductBuyBox({
   return (
     <>
       <div className="container-x grid gap-x-12 gap-y-8 pt-4 pb-16 lg:grid-cols-12 lg:pt-8 lg:pb-24 xl:gap-x-20">
-        {/* Gallery: swipeable on small screens, an editorial grid on large ones. */}
-        <div className="lg:col-span-7">
-          <div className="relative -mx-5 sm:-mx-8 lg:mx-0">
-            <div
-              ref={carousel}
-              className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] lg:grid lg:grid-cols-2 lg:gap-3 lg:overflow-visible [&::-webkit-scrollbar]:hidden"
-              onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}
-            >
-              {mixedImages ? (
-                <ZoomFigure className="w-full shrink-0 snap-center lg:col-span-2">
-                  <div className="grid aspect-[4/5] grid-cols-3 items-center px-4 lg:aspect-[5/4]">
-                    {mixedImages.map((c, i) =>
-                      c ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img key={i} src={c.image} alt={`${mixable?.[i].label} in ${c.name}`} className="aspect-[4/5] w-full object-contain" />
-                      ) : (
-                        <span key={i} />
-                      ),
+        {/* Gallery: one photo at a time (swipe, arrows or thumbnails). */}
+        <div className="lg:col-span-6">
+          <div className="lg:sticky lg:top-24">
+            <div className="group/gallery relative -mx-5 sm:-mx-8 lg:mx-0">
+              <div
+                ref={carousel}
+                tabIndex={0}
+                role="group"
+                aria-roledescription="carousel"
+                aria-label={`${product.name} photos`}
+                className="flex snap-x snap-mandatory overflow-x-auto bg-paper [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                onScroll={(e) => setSlide(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    goTo(slide - 1);
+                  } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    goTo(slide + 1);
+                  }
+                }}
+              >
+                {photos.map((photo, i) => (
+                  <ZoomFigure key={photo.key} className="w-full shrink-0 snap-center" hidden={i !== slide}>
+                    {photo.composite ? (
+                      <div className="grid aspect-[4/5] grid-cols-3 items-center px-4">
+                        {photo.composite.map((c, ci) =>
+                          c ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img key={ci} src={c.image} alt={`${mixable?.[ci].label} in ${c.name}`} className="aspect-[4/5] w-full object-contain" />
+                          ) : (
+                            <span key={ci} />
+                          ),
+                        )}
+                      </div>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={photo.url}
+                        alt={photo.alt}
+                        loading={i === 0 ? 'eager' : 'lazy'}
+                        fetchPriority={i === 0 ? 'high' : undefined}
+                        className="aspect-[4/5] w-full object-contain"
+                      />
                     )}
-                  </div>
-                </ZoomFigure>
-              ) : null}
-              {gallery.map((image, i) => {
-                const first = i === 0 && !mixedImages;
-                return (
-                  <ZoomFigure key={image.url} className={`w-full shrink-0 snap-center ${first ? 'lg:col-span-2' : ''}`}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={image.url}
-                      alt={image.alt}
-                      loading={i === 0 ? 'eager' : 'lazy'}
-                      fetchPriority={i === 0 ? 'high' : undefined}
-                      className={`aspect-[4/5] w-full object-contain ${first ? 'lg:aspect-[5/4]' : ''}`}
-                    />
                   </ZoomFigure>
-                );
-              })}
+                ))}
+              </div>
+
+              {photos.length > 1 ? (
+                <>
+                  <p className="label pointer-events-none absolute bottom-4 left-5 bg-bone/80 px-2 py-1 text-[10px] text-ink/70 backdrop-blur sm:left-8 lg:left-4">
+                    {String(slide + 1).padStart(2, '0')} / {String(photos.length).padStart(2, '0')}
+                  </p>
+                  {[-1, 1].map((direction) => (
+                    <button
+                      key={direction}
+                      type="button"
+                      onClick={() => goTo(slide + direction)}
+                      disabled={direction < 0 ? slide === 0 : slide === photos.length - 1}
+                      aria-label={direction < 0 ? 'Previous photo' : 'Next photo'}
+                      className={`absolute top-1/2 hidden size-11 -translate-y-1/2 place-items-center bg-bone/85 text-ink opacity-0 backdrop-blur transition-opacity duration-200 group-hover/gallery:opacity-100 focus-visible:opacity-100 disabled:!opacity-0 lg:grid ${
+                        direction < 0 ? 'left-3' : 'right-3'
+                      }`}
+                    >
+                      <svg viewBox="0 0 12 16" className="h-4 w-auto" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+                        <path d={direction < 0 ? 'M9 2 3 8l6 6' : 'M3 2l6 6-6 6'} />
+                      </svg>
+                    </button>
+                  ))}
+                </>
+              ) : null}
             </div>
-            {slides > 1 ? (
-              <p className="label pointer-events-none absolute bottom-4 left-5 bg-bone/80 px-2 py-1 text-[10px] text-ink/70 backdrop-blur sm:left-8 lg:hidden">
-                {String(slide + 1).padStart(2, '0')} / {String(slides).padStart(2, '0')}
-              </p>
+
+            {photos.length > 1 ? (
+              <div className="mt-3 hidden flex-wrap gap-2 sm:flex" role="tablist" aria-label="Choose a photo">
+                {photos.map((photo, i) => (
+                  <button
+                    key={photo.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={i === slide}
+                    aria-label={photo.alt}
+                    onClick={() => goTo(i)}
+                    className={`w-20 overflow-hidden border bg-paper transition-colors ${
+                      i === slide ? 'border-ink' : 'border-transparent opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    {photo.composite ? (
+                      <span className="grid aspect-square grid-cols-3 items-center px-1">
+                        {photo.composite.map((c, ci) =>
+                          c ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img key={ci} src={c.image} alt="" className="w-full object-contain" />
+                          ) : (
+                            <span key={ci} />
+                          ),
+                        )}
+                      </span>
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={photo.url} alt="" loading="lazy" className="aspect-square w-full object-contain" />
+                    )}
+                  </button>
+                ))}
+              </div>
             ) : null}
           </div>
         </div>
 
         {/* Buy box */}
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-6 xl:col-span-5 xl:col-start-8">
           <div className="lg:sticky lg:top-24">
             <nav className="label flex items-center gap-2 text-[10px] text-steel-600" aria-label="Breadcrumb">
               <Link href="/shop" className="hover:text-ink">
@@ -465,13 +539,13 @@ export function ProductBuyBox({
             ) : null}
 
             {/* What the shopper gets, each line backed by a page. */}
-            <ul className="mt-7 grid grid-cols-3 gap-px bg-ink/10 p-px text-center">
+            <ul className="hairline mt-7 grid grid-cols-3 divide-x divide-ink/10 border text-center">
               {[
                 { title: 'Delivery', text: shippingNote, href: '/shipping' },
                 { title: 'Returns', text: '7 days to return', href: '/returns' },
                 { title: 'Warranty', text: '2 years, replaceable wheels', href: '/warranty' },
               ].map((perk) => (
-                <li key={perk.href} className="bg-bone">
+                <li key={perk.href}>
                   <Link href={perk.href} className="group block h-full px-2 py-4 transition-colors hover:bg-white">
                     <span className="label block text-[10px] text-ember-600">{perk.title}</span>
                     <span className="mt-1.5 block text-[12px] leading-snug text-ink/70 group-hover:text-ink">{perk.text}</span>
@@ -602,19 +676,24 @@ export function ProductBuyBox({
       ) : null}
 
       {cards ? (
-        <section className="container-x py-16 lg:py-24">
-          <div className="flex items-end justify-between gap-6">
-            <div>
-              <p className="reveal label text-steel-600">{product.isSet ? 'Just need one?' : 'Goes with it'}</p>
-              <h2 className="reveal display mt-3 text-4xl sm:text-5xl" style={delay(60)}>
-                {product.isSet ? 'The single sizes.' : 'The same case, another size.'}
-              </h2>
-            </div>
-            <Link href="/shop" className="label hidden border-b border-ink pb-1 hover:border-ember hover:text-ember-600 sm:block">
+        <section className="container-x grid gap-x-12 gap-y-10 py-16 lg:grid-cols-12 lg:py-24">
+          <div className="lg:col-span-4">
+            <p className="reveal label text-steel-600">{product.isSet ? 'Just need one?' : 'Goes with it'}</p>
+            <h2 className="reveal display mt-3 text-4xl sm:text-5xl" style={delay(60)}>
+              {product.isSet ? 'The single sizes.' : 'The same case, another size.'}
+            </h2>
+            <p className="reveal mt-4 max-w-xs text-ink/65" style={delay(100)}>
+              Shown in {variant.colorName}, true to scale, so you can see the difference.
+            </p>
+            <Link
+              href="/shop"
+              className="reveal label mt-6 inline-block border-b border-ink pb-1 hover:border-ember hover:text-ember-600"
+              style={delay(140)}
+            >
               View all
             </Link>
           </div>
-          <div className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">{cards}</div>
+          <div className={`grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:col-span-8 ${product.isSet ? 'xl:grid-cols-3' : ''}`}>{cards}</div>
         </section>
       ) : null}
 

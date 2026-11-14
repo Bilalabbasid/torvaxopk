@@ -54,8 +54,8 @@ export function SiteHeader({ announcement }: { announcement: string }) {
               {items.map((item) => (
                 <span key={item} className="label flex items-center gap-6 pr-6 text-[10px] whitespace-nowrap text-bone/80">
                   {item}
-                  <svg viewBox="0 0 44.88 100" className="h-2.5 w-auto shrink-0 text-ember" fill="currentColor">
-                    <polygon points="0,0 14,0 44.88,50 14,100 0,100 30.88,50" />
+                  <svg viewBox="0 0 54.56 100" className="h-2.5 w-auto shrink-0 text-ember" fill="currentColor">
+                    <polygon points="0,0 20.56,0 54.56,50 20.56,100 0,100 34,50" />
                   </svg>
                 </span>
               ))}

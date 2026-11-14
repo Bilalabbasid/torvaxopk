@@ -140,8 +140,8 @@ export function CheckoutForm({ testMode }: { testMode: boolean }) {
       <ul className="hairline mt-5 space-y-2 border-t pt-4 text-[13px] text-ink/70">
         {['German quality, built to EU standards', '7 days to return it', '2-year warranty, wheels you replace yourself'].map((line) => (
           <li key={line} className="flex items-center gap-2.5">
-            <svg viewBox="0 0 44.88 100" className="h-2.5 w-auto shrink-0 text-ember" fill="currentColor" aria-hidden="true">
-              <polygon points="0,0 14,0 44.88,50 14,100 0,100 30.88,50" />
+            <svg viewBox="0 0 54.56 100" className="h-2.5 w-auto shrink-0 text-ember" fill="currentColor" aria-hidden="true">
+              <polygon points="0,0 20.56,0 54.56,50 20.56,100 0,100 34,50" />
             </svg>
             {line}
           </li>
@@ -187,12 +187,12 @@ export function CheckoutForm({ testMode }: { testMode: boolean }) {
               <li key={step.label} className="flex items-center gap-3">
                 {i ? (
                   <svg
-                    viewBox="0 0 44.88 100"
+                    viewBox="0 0 54.56 100"
                     className={`h-3 w-auto transition-colors duration-300 ${steps[i - 1].done ? 'text-ember' : 'text-ink/15'}`}
                     fill="currentColor"
                     aria-hidden="true"
                   >
-                    <polygon points="0,0 14,0 44.88,50 14,100 0,100 30.88,50" />
+                    <polygon points="0,0 20.56,0 54.56,50 20.56,100 0,100 34,50" />
                   </svg>
                 ) : null}
                 <span className={`label flex items-center gap-2 text-[10px] transition-colors duration-300 ${step.done ? 'text-ink' : 'text-steel'}`}>

@@ -40,23 +40,25 @@ export function Logo({ className, mono = false }: { className?: string; mono?: b
   );
 }
 
+/**
+ * The chevrons from the Torvaxo logo, on its exact geometry (as the German shop's TForward / TChevron).
+ * count 1: the bold lead stroke alone, for small functional arrows (buttons, list markers, links).
+ * count 2+: the forward mark, three graded strokes (thin, medium, bold), for accents and separators.
+ * Brand rule: it always points right.
+ */
 export function Chevrons({ count = 3, className }: { count?: number; className?: string }) {
+  if (count === 1) {
+    return (
+      <svg viewBox="0 0 54.56 100" aria-hidden="true" fill="currentColor" className={className}>
+        <polygon points="0,0 20.56,0 54.56,50 20.56,100 0,100 34,50" />
+      </svg>
+    );
+  }
   return (
-    <svg
-      viewBox={`0 0 ${(count - 1) * 36.885 + 44.88} 100`}
-      aria-hidden="true"
-      fill="currentColor"
-      preserveAspectRatio="xMaxYMid meet"
-      className={className}
-    >
-      {Array.from({ length: count }, (_, i) => (
-        <polygon
-          key={i}
-          transform={`translate(${i * 36.885},0)`}
-          opacity={count === 1 ? 1 : 0.2 + (0.8 * i) / (count - 1)}
-          points="0,0 10.88,0 44.88,50 10.88,100 0,100 34,50"
-        />
-      ))}
+    <svg viewBox="0 0 89.03 100" aria-hidden="true" fill="currentColor" className={className}>
+      <polygon points="0,0 6.17,0 40.17,50 6.17,100 0,100 34,50" />
+      <polygon transform="translate(14.67,0)" points="0,0 11.31,0 45.31,50 11.31,100 0,100 34,50" />
+      <polygon transform="translate(34.47,0)" points="0,0 20.56,0 54.56,50 20.56,100 0,100 34,50" />
     </svg>
   );
 }

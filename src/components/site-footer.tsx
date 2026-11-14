@@ -59,12 +59,12 @@ export function SiteFooter({ settings }: { settings: Settings }) {
                   <span className="mt-0.5 block text-[13px] text-bone/55">{promise.text}</span>
                 </span>
                 <svg
-                  viewBox="0 0 44.88 100"
+                  viewBox="0 0 54.56 100"
                   className="mt-1.5 h-3 w-auto shrink-0 text-bone/25 transition-all duration-300 ease-out-expo group-hover:translate-x-1 group-hover:text-ember"
                   fill="currentColor"
                   aria-hidden="true"
                 >
-                  <polygon points="0,0 14,0 44.88,50 14,100 0,100 30.88,50" />
+                  <polygon points="0,0 20.56,0 54.56,50 20.56,100 0,100 34,50" />
                 </svg>
               </Link>
             </li>
