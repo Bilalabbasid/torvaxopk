@@ -9,6 +9,8 @@ interface Colour {
   name: string;
   hex: string;
   image: string;
+  /** The product page, opened in this colour. */
+  href: string;
 }
 
 export function ColourStory({ colours }: { colours: Colour[] }) {
@@ -26,31 +28,31 @@ export function ColourStory({ colours }: { colours: Colour[] }) {
             <br />
             signal.
           </h2>
-          <div className="hairline mt-10 border-t" role="radiogroup" aria-label="Colour">
+          <div className="hairline mt-10 border-t">
             {colours.map((colour, i) => (
-              <button
+              <Link
                 key={colour.id}
-                role="radio"
-                aria-checked={i === index}
+                href={colour.href}
+                aria-current={i === index ? 'true' : undefined}
                 className={`hairline flex w-full items-center gap-5 border-b py-5 text-left transition-colors ${
                   i === index ? 'text-ink' : 'text-ink/40 hover:text-ink/70'
                 }`}
-                onClick={() => setIndex(i)}
                 onMouseEnter={() => setIndex(i)}
+                onFocus={() => setIndex(i)}
               >
                 <span className="label w-6">0{i + 1}</span>
                 <span className="size-5 rounded-full ring-1 ring-ink/10 ring-inset" style={{ backgroundColor: colour.hex }} />
                 <span className="flex-1 text-2xl font-medium tracking-tight sm:text-3xl">{colour.name}</span>
                 <Chevrons count={3} className={`h-4 w-auto text-ember transition-opacity ${i === index ? 'opacity-100' : 'opacity-0'}`} />
-              </button>
+              </Link>
             ))}
           </div>
-          <Link href={`/shop?colour=${encodeURIComponent(active.name)}`} className="btn-primary mt-8">
+          <Link href={active.href} className="btn-primary mt-8">
             Shop {active.name}
           </Link>
         </div>
         <div className="relative lg:col-span-8 lg:-mr-12">
-          <div className="relative aspect-[2048/1360]">
+          <Link href={active.href} aria-label={`The Forward set in ${active.name}`} className="relative block aspect-[2048/1360]">
             {colours.map((colour, i) => (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -58,12 +60,12 @@ export function ColourStory({ colours }: { colours: Colour[] }) {
                 src={colour.image}
                 alt={`The Forward series in ${colour.name}`}
                 loading="lazy"
-                className={`hero-image absolute inset-0 size-full object-cover transition-opacity duration-500 ${
+                className={`hero-image absolute inset-0 size-full object-contain transition-opacity duration-500 ${
                   i === index ? 'opacity-100' : 'opacity-0'
                 }`}
               />
             ))}
-          </div>
+          </Link>
         </div>
       </div>
     </section>

@@ -6,6 +6,7 @@ import { PriceTag, ProductCard, priceRange, singlePrices } from '@/components/pr
 import { TripPicker, type TripOption } from '@/components/trip-picker';
 import { getSettings, listActiveProducts } from '@/lib/catalog';
 import { forwardCases, forwardSet } from '@/lib/lines';
+import { colourSlug } from '@/lib/colour';
 import { money, unitPrice } from '@/lib/pricing';
 
 const technology = [
@@ -380,6 +381,7 @@ export default async function HomePage() {
             name: v.color_name,
             hex: v.color_hex,
             image: set.product_images.find((img) => img.variant_id === v.id)?.url ?? '',
+            href: `/products/${set.slug}?colour=${colourSlug(v.color_name)}`,
           }))}
         />
       ) : null}

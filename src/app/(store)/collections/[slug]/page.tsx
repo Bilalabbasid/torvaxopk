@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Chevrons } from '@/components/brand';
+import { CollectionDetails, CollectionFeature, CollectionPerks } from '@/components/collection-feature';
 import { JsonLd, breadcrumbs, faqPage, abs } from '@/components/json-ld';
 import { ProductCard, priceRange } from '@/components/product-card';
 import { COLLECTIONS, getCollection } from '@/content/collections';
@@ -13,10 +14,15 @@ async function load(slug: string) {
   if (!collection) return null;
   const [settings, products] = await Promise.all([getSettings(), listActiveProducts()]);
   const items = products.filter(collection.filter);
+  // A page with only a few products also shows others that go with them, closest category first.
+  const others = products
+    .filter((p) => !items.includes(p))
+    .sort((a, b) => Number(b.category === items[0]?.category) - Number(a.category === items[0]?.category));
+  const pairs = items.length < 4 ? others.slice(0, 4) : [];
   const prices = items.map((p) => priceRange(p, settings.sale_mode).price);
   const from = prices.length ? money(Math.min(...prices)) : '';
   const fill = (text: string) => text.replaceAll('{from}', from);
-  return { collection, settings, items, fill };
+  return { collection, settings, items, pairs, fill };
 }
 
 export async function generateMetadata(props: PageProps<'/collections/[slug]'>) {
@@ -40,7 +46,9 @@ export default async function CollectionPage(props: PageProps<'/collections/[slu
   const { slug } = await props.params;
   const data = await load(slug);
   if (!data) notFound();
-  const { collection, settings, items, fill } = data;
+  const { collection, settings, items, pairs, fill } = data;
+  const featured = items.length > 0 && items.length < 4;
+  const luggage = items.some((p) => p.category === 'luggage');
   const faqs = collection.faqs.map((f) => ({ q: f.q, a: fill(f.a) }));
   const related = COLLECTIONS.filter((c) => c.slug !== collection.slug);
 
@@ -94,11 +102,19 @@ export default async function CollectionPage(props: PageProps<'/collections/[slu
         <p className="label mt-6 text-steel-600">
           {items.length} {items.length === 1 ? 'product' : 'products'}
         </p>
-        <div className="mt-8 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
-          {items.map((product, i) => (
-            <ProductCard key={product.id} product={product} mode={settings.sale_mode} index={i} />
-          ))}
-        </div>
+        {featured ? (
+          <div className="mt-2">
+            {items.map((product, i) => (
+              <CollectionFeature key={product.id} product={product} mode={settings.sale_mode} index={i} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-8 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
+            {items.map((product, i) => (
+              <ProductCard key={product.id} product={product} mode={settings.sale_mode} index={i} />
+            ))}
+          </div>
+        )}
         {!items.length ? (
           <p className="mt-10 text-steel-600">
             Coming soon.{' '}
@@ -107,7 +123,38 @@ export default async function CollectionPage(props: PageProps<'/collections/[slu
             </Link>
           </p>
         ) : null}
+
+        <div className="mt-16 lg:mt-20">
+          <CollectionPerks />
+        </div>
       </section>
+
+      {luggage ? (
+        <section className="container-x pb-16 lg:pb-24">
+          <p className="label text-steel-600">In every case</p>
+          <h2 className="display mt-4 mb-10 text-4xl sm:text-5xl">Built for the trip.</h2>
+          <CollectionDetails />
+        </section>
+      ) : null}
+
+      {pairs.length ? (
+        <section className="container-x pb-16 lg:pb-24">
+          <div className="flex items-end justify-between gap-6 border-b border-ink pb-6">
+            <div>
+              <p className="label text-steel-600">Pairs well with</p>
+              <h2 className="display mt-4 text-4xl sm:text-5xl">Complete the trip.</h2>
+            </div>
+            <Link href="/shop" className="btn-outline btn-sm hidden sm:inline-flex">
+              See the whole shop
+            </Link>
+          </div>
+          <div className="mt-10 grid gap-x-6 gap-y-14 sm:grid-cols-2 lg:grid-cols-4">
+            {pairs.map((product, i) => (
+              <ProductCard key={product.id} product={product} mode={settings.sale_mode} index={i} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {faqs.length ? (
         <section className="bg-paper">
