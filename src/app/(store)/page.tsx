@@ -31,6 +31,13 @@ const technology = [
 
 const marquee = ['German quality', 'Built to EU standards', 'Elegance endures', 'TSA lock built in', 'Detachable spinners', '2-year warranty', 'Three sizes', 'Three colours', 'Delivered across Pakistan'];
 
+export const metadata = {
+  title: { absolute: 'Torvaxo Pakistan: Suitcases, Trolley Bags & Luggage Sets | German Quality' },
+  description:
+    'Hardshell suitcases and trolley bags from Torvaxo, a German brand built to EU standards. Cabin, medium, large and 3-piece luggage sets with TSA lock. Suitcase prices in Pakistan, delivery nationwide.',
+  alternates: { canonical: '/' },
+};
+
 export default async function HomePage() {
   const [settings, products] = await Promise.all([getSettings(), listActiveProducts()]);
   const mode = settings.sale_mode;

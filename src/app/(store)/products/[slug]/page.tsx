@@ -1,21 +1,30 @@
 import { notFound } from 'next/navigation';
+import { JsonLd, abs, breadcrumbs } from '@/components/json-ld';
+import { COLLECTIONS } from '@/content/collections';
 import { ProductBuyBox, type BundleOffer, type Sibling } from '@/components/product-buy-box';
 import { ProductCard, priceRange, singlePrices } from '@/components/product-card';
 import { SizeGuide } from '@/components/size-guide';
 import { getProductBySlug, getSettings, listActiveProducts } from '@/lib/catalog';
 import { colourSlug } from '@/lib/colour';
 import { EDITIONS, FORWARD, forwardCases, forwardSet, hasWheels, optionLabel } from '@/lib/lines';
-import { unitPrice } from '@/lib/pricing';
+import { money, unitPrice } from '@/lib/pricing';
+import { siteUrl } from '@/lib/site-url';
 
 export async function generateMetadata(props: PageProps<'/products/[slug]'>) {
   const { slug } = await props.params;
-  const product = await getProductBySlug(slug);
+  const [product, settings] = await Promise.all([getProductBySlug(slug), getSettings()]);
   if (!product) return { title: 'Not found' };
+  const { price, compareAt } = priceRange(product, settings.sale_mode);
+  const preorder = settings.sale_mode === 'preorder' && compareAt;
+  const priceText = preorder ? `${money(price)} on preorder (${money(compareAt)} after launch)` : money(price);
+  const description = `${product.name}: ${product.tagline} ${priceText}. ${
+    product.category === 'luggage' ? 'Hardshell, TSA lock, detachable spinner wheels. ' : ''
+  }German brand, 2-year warranty, delivery across Pakistan.`;
   return {
-    title: product.name,
-    description: `${product.tagline} ${product.description}`.slice(0, 160),
+    title: `${product.name} Price in Pakistan`,
+    description: description.slice(0, 300),
     alternates: { canonical: `/products/${product.slug}` },
-    openGraph: { title: product.name, description: product.tagline, images: product.product_images.slice(0, 1).map((i) => i.url) },
+    openGraph: { title: `${product.name} | Torvaxo Pakistan`, description, images: product.product_images.slice(0, 1).map((i) => abs(i.url)) },
   };
 }
 
@@ -132,10 +141,13 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
         )
       : undefined;
 
+  // The landing page this product belongs to, for breadcrumbs.
+  const landing = COLLECTIONS.find((c) => c.filter(product));
+
   const wantedColour = typeof query.colour === 'string' ? colourSlug(query.colour) : null;
 
   // Product structured data (Google rich results: price, availability, PKR).
-  const site = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const site = siteUrl();
   const abs = (u: string) => (u.startsWith('http') ? u : `${site}${u}`);
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -169,10 +181,15 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        // JSON.stringify output with "<" escaped cannot break out of the script tag.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+      <JsonLd
+        data={[
+          jsonLd,
+          breadcrumbs([
+            { name: 'Home', url: '/' },
+            ...(landing ? [{ name: landing.h1, url: `/collections/${landing.slug}` }] : [{ name: 'Shop', url: '/shop' }]),
+            { name: product.name, url: `/products/${product.slug}` },
+          ]),
+        ]}
       />
       <ProductBuyBox
         key={product.slug}

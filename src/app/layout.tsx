@@ -1,16 +1,17 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { siteUrl as siteUrlFor } from '@/lib/site-url';
 
 // Stock, prices and the preorder/live switch come from the database on every request.
 export const dynamic = 'force-dynamic';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+const siteUrl = siteUrlFor();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { default: 'Torvaxo Pakistan — Elegance endures.', template: '%s · Torvaxo Pakistan' },
+  title: { default: 'Torvaxo Pakistan: Suitcases, Trolley Bags & Luggage Sets', template: '%s | Torvaxo Pakistan' },
   description:
-    'Torvaxo is a German luggage brand. Hardshell cases built to EU quality standards, with a TSA lock, replaceable wheels and a 2-year warranty. The Forward series, now in Pakistan.',
+    'Suitcase and luggage bag prices in Pakistan from Torvaxo, a German brand: hardshell trolley bags, 3-piece luggage sets and travel bags. TSA lock, 2-year warranty, delivery across Pakistan.',
   openGraph: { type: 'website', locale: 'en_PK', siteName: 'Torvaxo Pakistan', images: ['/images/hero-trio.jpg'] },
 };
 

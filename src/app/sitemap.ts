@@ -1,15 +1,20 @@
 import type { MetadataRoute } from 'next';
+import { COLLECTIONS } from '@/content/collections';
+import { GUIDES } from '@/content/guides';
 import { INFO_PAGES } from '@/content/pages';
 import { listActiveProducts } from '@/lib/catalog';
+import { siteUrl } from '@/lib/site-url';
 
 export const dynamic = 'force-dynamic';
 
-const base = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/$/, '');
+const base = siteUrl();
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages: MetadataRoute.Sitemap = [
     { url: `${base}/`, changeFrequency: 'daily', priority: 1 },
     { url: `${base}/shop`, changeFrequency: 'daily', priority: 0.9 },
+    ...COLLECTIONS.map((c) => ({ url: `${base}/collections/${c.slug}`, changeFrequency: 'weekly' as const, priority: 0.9 })),
+    ...GUIDES.map((g) => ({ url: `${base}/guides/${g.slug}`, changeFrequency: 'monthly' as const, priority: 0.6 })),
     ...Object.keys(INFO_PAGES).map((slug) => ({ url: `${base}/${slug}`, changeFrequency: 'monthly' as const, priority: 0.4 })),
   ];
   try {

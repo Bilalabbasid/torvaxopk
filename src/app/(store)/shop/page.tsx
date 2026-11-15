@@ -3,11 +3,12 @@ import { ProductCard } from '@/components/product-card';
 import { getSettings, listActiveProducts } from '@/lib/catalog';
 import { colourMatches, colourSlug } from '@/lib/colour';
 import { CATEGORIES, EDITIONS, type Category } from '@/lib/lines';
+import { COLLECTIONS } from '@/content/collections';
 
 export const metadata = {
-  title: 'Shop luggage and bags',
+  title: 'Luggage, Suitcases & Travel Bags in Pakistan',
   description:
-    'The Torvaxo Forward series and bags: hardshell cases, the Set of Three, backpacks, slings, duffels, the Signature edition and spare wheels. Delivered across Pakistan.',
+    'Shop Torvaxo luggage in Pakistan: hardshell suitcases and trolley bags, 3-piece luggage sets, backpacks, duffel bags, sling bags and spare wheels. Delivery nationwide, cash on delivery.',
   alternates: { canonical: '/shop' },
 };
 
@@ -102,6 +103,15 @@ export default async function ShopPage(props: PageProps<'/shop'>) {
           </div>
         </div>
       </header>
+
+      <nav className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink/60" aria-label="Popular">
+        <span className="label text-[10px] text-steel-600">Popular</span>
+        {COLLECTIONS.map((c) => (
+          <Link key={c.slug} href={`/collections/${c.slug}`} className="underline-offset-4 hover:text-ink hover:underline">
+            {c.nav}
+          </Link>
+        ))}
+      </nav>
 
       <p className="label mt-6 text-steel-600" aria-live="polite">
         {shown.length} {shown.length === 1 ? 'product' : 'products'}

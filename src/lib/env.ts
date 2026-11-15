@@ -1,4 +1,5 @@
 import 'server-only';
+import { siteUrl } from './site-url';
 
 function read(name: string): string {
   return process.env[name]?.trim() ?? '';
@@ -9,7 +10,7 @@ function isPlaceholder(value: string) {
 }
 
 export const env = {
-  siteUrl: (read('NEXT_PUBLIC_SITE_URL') || 'http://localhost:3000').replace(/\/$/, ''),
+  siteUrl: siteUrl(),
   supabaseUrl: read('NEXT_PUBLIC_SUPABASE_URL'),
   supabaseAnonKey: read('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY') || read('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
   supabaseServiceKey: read('SUPABASE_SERVICE_ROLE_KEY'),

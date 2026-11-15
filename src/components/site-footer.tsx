@@ -1,14 +1,14 @@
 import Link from 'next/link';
+import { COLLECTIONS } from '@/content/collections';
+import { GUIDES } from '@/content/guides';
 import { money } from '@/lib/pricing';
 import type { Settings } from '@/lib/types';
 import { Logo } from './brand';
 
 const shop = [
   { label: 'All products', href: '/shop' },
-  { label: 'Luggage', href: '/shop?category=luggage' },
-  { label: 'Backpacks and bags', href: '/shop?category=bags' },
+  ...COLLECTIONS.map((c) => ({ label: c.nav, href: `/collections/${c.slug}` })),
   { label: 'Signature edition', href: '/shop?edition=signature' },
-  { label: 'Wheels and parts', href: '/shop?category=parts' },
 ];
 
 const service = [
@@ -17,6 +17,7 @@ const service = [
   { label: 'Returns', href: '/returns' },
   { label: 'Warranty', href: '/warranty' },
   { label: 'Contact', href: '/contact' },
+  ...GUIDES.map((g) => ({ label: g.nav, href: `/guides/${g.slug}` })),
 ];
 
 const legal = [
