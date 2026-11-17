@@ -118,9 +118,13 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
   // Cross-selling, pre-set to the colour being viewed: on a case the other sizes, on the set the single
   // sizes, on anything else the rest of its line, or failing that more of the same category.
   const sameSeries = series.filter((p) => p.id !== product.id && !(product.series === FORWARD && p.is_set));
+  // On any other set, the other sets: another design is the alternative, not a single Forward case.
+  const isOtherSet = product.is_set && !isForwardSet;
   const others = isForwardSet
     ? cases
-    : sameSeries.length
+    : isOtherSet
+      ? catalogue.filter((p) => p.is_set && p.id !== product.id).slice(0, 3)
+      : sameSeries.length
       ? sameSeries
       : catalogue.filter((p) => p.category === product.category && p.edition === product.edition && p.id !== product.id).slice(0, 3);
   const suggestions = Object.fromEntries(
@@ -130,9 +134,9 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
     ]),
   );
 
-  // The size guide belongs to the cases.
+  // The size guide compares the Forward cases, so it belongs to the Forward line.
   const sizeGuide =
-    product.category === 'luggage'
+    product.category === 'luggage' && product.series.startsWith(FORWARD)
       ? Object.fromEntries(
           product.product_variants.map((v) => [
             v.color_name,
@@ -198,7 +202,9 @@ export default async function ProductPage(props: PageProps<'/products/[slug]'>) 
           slug: product.slug,
           tagline: product.tagline,
           description: product.description,
-          isSet: product.is_set,
+          // Only the Forward set has single cases to offer under "Just need one?".
+          isSet: isForwardSet,
+          otherSet: isOtherSet,
           category: product.category,
           optionLabel: optionLabel(product.category),
           hasWheels: hasWheels(product.category),

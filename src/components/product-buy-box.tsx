@@ -108,6 +108,8 @@ export function ProductBuyBox({
     tagline: string;
     description: string;
     isSet: boolean;
+    /** A set other than Forward: suggestions are the other sets. */
+    otherSet?: boolean;
     category: string;
     /** What the siblings are called: Size, Edition or Pack. */
     optionLabel: string;
@@ -717,18 +719,22 @@ export function ProductBuyBox({
       {cards ? (
         <section className="container-x grid gap-x-12 gap-y-10 py-16 lg:grid-cols-12 lg:py-24">
           <div className="lg:col-span-4">
-            <p className="reveal label text-steel-600">{product.isSet ? 'Just need one?' : 'Goes with it'}</p>
+            <p className="reveal label text-steel-600">{product.isSet ? 'Just need one?' : product.otherSet ? 'More sets' : 'Goes with it'}</p>
             <h2 className="reveal display mt-3 text-4xl sm:text-5xl" style={delay(60)}>
               {product.isSet
                 ? 'The single sizes.'
-                : product.optionLabel === 'Size'
+                : product.otherSet
+                  ? 'Another design.'
+                  : product.optionLabel === 'Size'
                   ? 'The same case, another size.'
                   : product.optionLabel === 'Edition'
                     ? 'The other edition.'
                     : 'More for your case.'}
             </h2>
             <p className="reveal mt-4 max-w-xs text-ink/65" style={delay(100)}>
-              {product.optionLabel === 'Size'
+              {product.otherSet
+                ? 'Every set is a Cabin, a Medium and a Large.'
+                : product.optionLabel === 'Size'
                 ? `Shown in ${variant.colorName}, true to scale, so you can see the difference.`
                 : `Shown in ${variant.colorName} where available.`}
             </p>
@@ -740,7 +746,7 @@ export function ProductBuyBox({
               View all
             </Link>
           </div>
-          <div className={`grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:col-span-8 ${product.isSet ? 'xl:grid-cols-3' : ''}`}>{cards}</div>
+          <div className={`grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:col-span-8 ${product.isSet || product.otherSet ? 'xl:grid-cols-3' : ''}`}>{cards}</div>
         </section>
       ) : null}
 

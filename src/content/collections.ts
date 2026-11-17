@@ -56,19 +56,19 @@ export const COLLECTIONS: Collection[] = [
     nav: 'Luggage sets',
     title: 'Luggage Set Price in Pakistan: 3-Piece Suitcase Set',
     description:
-      'The Torvaxo Forward Set of Three: Cabin 20", Medium 24" and Large 28" hardshell suitcases from {from}. Pick one colour or mix them. Delivery across Pakistan.',
+      '3-piece hardshell suitcase sets from Torvaxo: Cabin 20", Medium 24" and Large 28" from {from}. Six designs, TSA lock, spinner wheels. Delivery across Pakistan.',
     eyebrow: 'Luggage sets',
     h1: 'Luggage sets',
     intro: [
-      'The Forward Set of Three is a 3-piece hardshell suitcase set: Cabin (20 inch), Medium (24 inch) and Large (28 inch). The cases nest inside each other for storage and cost less than buying the three sizes one by one.',
-      'Choose one colour for all three, or give each case its own colour. The set starts from {from} on preorder.',
+      'Every Torvaxo set is three hardshell suitcases: Cabin (20 inch), Medium (24 inch) and Large (28 inch), each with a TSA combination lock and 360° spinner wheels.',
+      'The Forward Set of Three comes in five colours, and you can give each case its own. Prism, Aegis, Onyx, Meridian and Stratos are bolder designs in Black. Sets start from {from} on preorder.',
     ],
     keywords: ['suitcase set price in pakistan', 'suitcase set', 'luggage set', 'luggage set price in pakistan', '3 piece luggage set'],
     filter: (p) => p.category === 'luggage' && p.is_set,
     faqs: [
-      { q: 'What is the price of a 3-piece luggage set in Pakistan?', a: 'The Torvaxo Forward Set of Three is {from} on preorder, for a Cabin, a Medium and a Large hardshell suitcase.' },
-      { q: 'Can I choose a different colour for each suitcase in the set?', a: 'Yes. Pick one colour for all three, or choose the colour of the Cabin, Medium and Large case separately. The price stays the same.' },
-      { q: 'How do the three suitcases store at home?', a: 'They nest: the Cabin fits inside the Medium, and the Medium inside the Large, so the set takes the space of one case.' },
+      { q: 'What is the price of a 3-piece luggage set in Pakistan?', a: 'Torvaxo sets start from {from} on preorder with the Forward Set of Three, for a Cabin, a Medium and a Large hardshell suitcase. The designer sets (Prism, Aegis, Onyx, Meridian and Stratos) cost Rs 15,000 more.' },
+      { q: 'Can I choose a different colour for each suitcase in the set?', a: 'On the Forward Set of Three, yes. Pick one colour for all three, or choose the colour of the Cabin, Medium and Large case separately. The price stays the same. The designer sets come in Black.' },
+      { q: 'How do the three suitcases store at home?', a: 'The Forward cases nest: the Cabin fits inside the Medium, and the Medium inside the Large, so the set takes the space of one case.' },
     ],
   },
   {

@@ -95,6 +95,29 @@ const BAGS = [
     ['Wide twin-zip opening', 'Front zip pocket', 'Carry handles with wrap', 'Shoulder strap']],
 ];
 
+// More 3-piece sets, each its own design, in Black: Rs 15,000 above the Forward Set of Three
+// (Rs 51,000 after launch, Rs 35,000 on preorder).
+const SET_EXTRA = 15000;
+const SET_FEATURES = ['Integrated TSA combination lock', '360° double spinner wheels with Ember rims', 'Aluminium telescopic handle', 'Brushed-metal name plate'];
+// [slug, name, sku, tagline, description, design feature]
+const SETS = [
+  ['prism-set', 'Prism Set of Three', 'PRS', 'Cut like a gem. Built like a case.',
+    'A faceted hardshell that catches the light from every angle, crossed by a brushed-metal band. Cabin, Medium and Large in one set.',
+    'Faceted hardshell with a brushed-metal band'],
+  ['aegis-set', 'Aegis Set of Three', 'AEG', 'Armoured at every corner.',
+    'Raised corner guards, a carbon-textured shell and the Torvaxo chevrons in Ember on a metal plate. The set built for rough handling.',
+    'Raised corner guards and carbon-textured shell'],
+  ['onyx-set', 'Onyx Set of Three', 'ONX', 'A honeycomb that hides the scuffs.',
+    'A fine honeycomb texture over the whole shell keeps scratches out of sight, finished with a brushed-metal name band.',
+    'Honeycomb-textured hardshell'],
+  ['meridian-set', 'Meridian Set of Three', 'MRD', 'Two finishes. One clean line.',
+    'Textured above, smooth below, split by a diagonal line of Ember. The most graphic set of the range.',
+    'Two-tone shell split by a diagonal Ember line'],
+  ['stratos-set', 'Stratos Set of Three', 'STR', 'A sharp fold down the front.',
+    'A smooth matte shell with a diagonal crease down the front and a full-width brushed-metal band.',
+    'Smooth matte shell with a diagonal crease'],
+];
+
 function catalogue() {
   const products = [];
   let pos = 0;
@@ -127,6 +150,19 @@ function catalogue() {
     photos: (c, name) => [[`forward-set-${c}.jpg`, `Forward Set of Three in ${name}`, true]],
     shared: DETAILS,
   });
+
+  for (const [slug, name, sku, tagline, description, design] of SETS) {
+    products.push({
+      slug, name, sku, series: name.replace(' Set of Three', ''), category: 'luggage', size_label: 'Set of 3', is_set: true, tagline, description,
+      specs: [
+        { label: 'Includes', value: 'Cabin (20 inch), Medium (24 inch) and Large (28 inch)' },
+        { label: 'Lock', value: 'TSA combination lock on each case' },
+        { label: 'Wheels', value: '360° double spinners' },
+      ],
+      features: [design, ...SET_FEATURES], price: 51000 + SET_EXTRA, preorder: 35000 + SET_EXTRA, colours: ['black'], sort: pos++,
+      photos: (c, colour) => [[`${slug}-${c}.jpg`, `${name} in ${colour}`, true]],
+    });
+  }
 
   for (const [key, [label, sku, price, preorder, specs]] of Object.entries(CASES)) {
     products.push({
