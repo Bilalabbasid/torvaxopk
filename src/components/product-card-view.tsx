@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { colourSlug } from '@/lib/colour';
@@ -37,21 +38,30 @@ export function ProductCardView({
   const [preview, setPreview] = useState<number | null>(null);
   const active = colours[preview ?? chosen] ?? colours[0];
   const image = active?.image ?? colours.find((c) => c.image)?.image ?? null;
+  // Every colour's photo is in the card from the start, resized for the card, so a click swaps
+  // instantly instead of waiting for a download while the old photo stays on screen.
+  const photos = [...new Map(colours.flatMap((c) => (c.image ? [[c.image.url, c.image] as const] : []))).values()];
   // Open the product in the colour that is showing (hovered or chosen).
   const link = active ? `${href}?colour=${colourSlug(active.name)}` : href;
 
   return (
     <div className="group">
       <Link href={link} className="relative block aspect-[4/5] overflow-hidden bg-paper">
-        {image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={image.url}
-            alt={image.alt}
-            loading="lazy"
-            className="size-full object-contain transition-transform duration-[1400ms] ease-out-expo group-hover:scale-[1.03]"
-          />
-        ) : null}
+        {photos.map((photo) => {
+          const on = photo.url === image?.url;
+          return (
+            <Image
+              key={photo.url}
+              src={photo.url}
+              alt={on ? photo.alt : ''}
+              aria-hidden={on ? undefined : true}
+              fill
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+              className={`object-contain group-hover:scale-[1.03] ${on ? 'opacity-100' : 'opacity-0'}`}
+              style={{ transition: 'opacity 250ms ease, transform 1400ms var(--ease-out-expo)' }}
+            />
+          );
+        })}
         <span className="label absolute top-4 left-4 text-steel-600">0{index + 1}</span>
         {preorder ? <span className="label absolute top-4 right-4 bg-ember px-2 py-1 text-[10px] text-ink">Preorder</span> : null}
         {soldOut ? (
